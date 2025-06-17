@@ -12,7 +12,7 @@ We make heavy use of MCP servers, call them for function signatures, documentati
 
 ### Ash
 
-We use the ash framework which is a elixir framework for declarative coding. Read up on how to use this version of ash in the ash book: docs/ash-book.md
+We use the ash framework which is a elixir framework for declarative coding. Read up on how to use this version of ash in the ash book: `docs/ash.md`
 
 For any additional library we need, first check if there is an ash version of it. <https://github.com/search?q=ash_%20elixir&type=repositories> has a lot of repositories with possibly relevant ash extensions.
 
@@ -28,6 +28,10 @@ We make heavy use of AshAI for all our agent use cases. AshAI is _very_ new and 
 We use Phoenix 1.8 which is the latest version and the documentation is not always up to date. Check <https://hexdocs.pm/phoenix/1.8.0-rc.3/overview.html> to get the latest documentation version.
 
 Always use live_views where possible. There is a `core_components` library that we should make heavy use of. For everything that is missing from the core components create new components. Simple components for static functionality and live components for anything that needs to hold state.
+
+There is also a Phoenix book for added context: `docs/phoenix.md`
+
+When working with phoenix and ash, keep in mind that we use ash for all phoenix interactions. This means we have no phoenix contexts but ash domains instead. We also use the ash form handlers that are provided by ash_phoenix. We also use the ash authentication framework.
 
 ### Tailwind
 
