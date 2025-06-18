@@ -34,10 +34,11 @@ defmodule Anderson.MemoryOS.Workers.CheckSTMCapacityWorker do
     stm_capacity = config.stm_capacity
 
     # Get all STM pages for this agent, ordered by creation time
-    stm_pages = Anderson.MemoryOS.STM.DialoguePage
-    |> Ash.Query.filter(agent_id == ^agent_id and is_nil(dialogue_segment_id))
-    |> Ash.Query.sort(inserted_at: :asc)
-    |> Ash.read!()
+    stm_pages =
+      Anderson.MemoryOS.STM.DialoguePage
+      |> Ash.Query.filter(agent_id == ^agent_id and is_nil(dialogue_segment_id))
+      |> Ash.Query.sort(inserted_at: :asc)
+      |> Ash.read!()
 
     pages_count = length(stm_pages)
 
@@ -85,9 +86,10 @@ defmodule Anderson.MemoryOS.Workers.CheckSTMCapacityWorker do
     fscore_threshold = config.mtm_fscore_threshold
 
     # Get all existing segments for this agent
-    segments = Anderson.MemoryOS.MTM.DialogueSegment
-    |> Ash.Query.filter(agent_id == ^page.agent_id)
-    |> Ash.read!()
+    segments =
+      Anderson.MemoryOS.MTM.DialogueSegment
+      |> Ash.Query.filter(agent_id == ^page.agent_id)
+      |> Ash.read!()
 
     if Enum.empty?(segments) do
       {:not_found, "No existing segments for agent"}
@@ -96,26 +98,29 @@ defmodule Anderson.MemoryOS.Workers.CheckSTMCapacityWorker do
       # Note: In a full implementation, we would extract embeddings and keywords from the page
       # For now, we use a simplified approach based on text similarity
 
-      segment_scores = Enum.map(segments, fn segment ->
-        # Prepare context for similarity calculation
-        context = %{
-          query_embedding: extract_page_embedding(page),
-          query_keywords: extract_page_keywords(page)
-        }
+      segment_scores =
+        Enum.map(segments, fn segment ->
+          # Prepare context for similarity calculation
+          context = %{
+            query_embedding: extract_page_embedding(page),
+            query_keywords: extract_page_keywords(page)
+          }
 
-        # Load the segment with Fscore calculation
-        segment_with_fscore = Anderson.MemoryOS.MTM.DialogueSegment
-        |> Ash.Query.filter(id == ^segment.id)
-        |> Ash.Query.load(fscore: context)
-        |> Ash.read_one!()
+          # Load the segment with Fscore calculation
+          segment_with_fscore =
+            Anderson.MemoryOS.MTM.DialogueSegment
+            |> Ash.Query.filter(id == ^segment.id)
+            |> Ash.Query.load(fscore: context)
+            |> Ash.read_one!()
 
-        {segment, segment_with_fscore.fscore || 0.0}
-      end)
+          {segment, segment_with_fscore.fscore || 0.0}
+        end)
 
       # Find the segment with the highest Fscore above threshold
-      best_match = segment_scores
-      |> Enum.filter(fn {_segment, score} -> score >= fscore_threshold end)
-      |> Enum.max_by(fn {_segment, score} -> score end, fn -> nil end)
+      best_match =
+        segment_scores
+        |> Enum.filter(fn {_segment, score} -> score >= fscore_threshold end)
+        |> Enum.max_by(fn {_segment, score} -> score end, fn -> nil end)
 
       case best_match do
         {segment, _score} ->
@@ -139,23 +144,28 @@ defmodule Anderson.MemoryOS.Workers.CheckSTMCapacityWorker do
     # from page.query and page.response
     # For now, return simple word extraction
     text = "#{page.query} #{page.response}"
+
     text
     |> String.downcase()
     |> String.split(~r/\W+/, trim: true)
     |> Enum.filter(&(String.length(&1) > 3))
     |> Enum.uniq()
-    |> Enum.take(10)  # Limit to 10 keywords
+    # Limit to 10 keywords
+    |> Enum.take(10)
   end
 
   defp get_agent_config(agent_id) do
     # Get or create configuration for this agent with defaults
     case Anderson.MemoryOS.Configuration.get_or_create(agent_id, "default", %{}) do
-      {:ok, config} -> config
+      {:ok, config} ->
+        config
+
       {:error, _} ->
         # Fallback to application defaults
         %{
           stm_capacity: Application.get_env(:anderson, :memory_os)[:default_stm_capacity] || 7,
-          mtm_fscore_threshold: Application.get_env(:anderson, :memory_os)[:default_fscore_threshold] || 0.6
+          mtm_fscore_threshold:
+            Application.get_env(:anderson, :memory_os)[:default_fscore_threshold] || 0.6
         }
     end
   end

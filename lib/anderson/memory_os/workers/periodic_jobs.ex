@@ -22,7 +22,8 @@ defmodule Anderson.MemoryOS.Workers.PeriodicJobs do
     # Schedule periodic heat score updates every hour
     %{agent_id: agent_id}
     |> Anderson.MemoryOS.Workers.UpdateHeatScoreWorker.new(
-      schedule_in: 3600,  # 1 hour
+      # 1 hour
+      schedule_in: 3600,
       queue: :memory
     )
     |> Oban.insert()
@@ -37,7 +38,8 @@ defmodule Anderson.MemoryOS.Workers.PeriodicJobs do
     # Schedule LPM evaluation every 6 hours
     %{agent_id: agent_id}
     |> Anderson.MemoryOS.Workers.LpmSystemTransferWorker.new(
-      schedule_in: 21600,  # 6 hours
+      # 6 hours
+      schedule_in: 21600,
       queue: :memory
     )
     |> Oban.insert()
@@ -52,7 +54,8 @@ defmodule Anderson.MemoryOS.Workers.PeriodicJobs do
     # Schedule system maintenance every day
     %{operation: "maintenance"}
     |> Anderson.MemoryOS.Workers.LpmSystemTransferWorker.new(
-      schedule_in: 86400,  # 24 hours
+      # 24 hours
+      schedule_in: 86400,
       queue: :memory
     )
     |> Oban.insert()
@@ -66,10 +69,12 @@ defmodule Anderson.MemoryOS.Workers.PeriodicJobs do
   def cron_config do
     [
       # Update heat scores for all agents every 2 hours
-      {"0 */2 * * *", Anderson.MemoryOS.Workers.PeriodicJobs, args: %{task: "update_all_heat_scores"}},
+      {"0 */2 * * *", Anderson.MemoryOS.Workers.PeriodicJobs,
+       args: %{task: "update_all_heat_scores"}},
 
       # Evaluate LPM for SystemMemory promotion every 6 hours
-      {"0 */6 * * *", Anderson.MemoryOS.Workers.PeriodicJobs, args: %{task: "evaluate_lpm_promotion"}},
+      {"0 */6 * * *", Anderson.MemoryOS.Workers.PeriodicJobs,
+       args: %{task: "evaluate_lpm_promotion"}},
 
       # System maintenance daily at 2 AM
       {"0 2 * * *", Anderson.MemoryOS.Workers.PeriodicJobs, args: %{task: "system_maintenance"}},

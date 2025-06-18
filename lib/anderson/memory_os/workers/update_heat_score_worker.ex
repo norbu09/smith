@@ -45,9 +45,10 @@ defmodule Anderson.MemoryOS.Workers.UpdateHeatScoreWorker do
 
   defp update_all_heat_scores_for_agent(agent_id) do
     # Get all segments for this agent
-    segments = Anderson.MemoryOS.MTM.DialogueSegment
-    |> Ash.Query.filter(agent_id == ^agent_id)
-    |> Ash.read!()
+    segments =
+      Anderson.MemoryOS.MTM.DialogueSegment
+      |> Ash.Query.filter(agent_id == ^agent_id)
+      |> Ash.read!()
 
     # Update heat score for each segment
     Enum.each(segments, &update_segment_heat_score/1)
@@ -61,11 +62,12 @@ defmodule Anderson.MemoryOS.Workers.UpdateHeatScoreWorker do
     heat_threshold = config.heat_threshold
 
     # Get all segments for this agent, sorted by heat score
-    segments = Anderson.MemoryOS.MTM.DialogueSegment
-    |> Ash.Query.filter(agent_id == ^agent_id)
-    |> Ash.Query.load(:calculate_heat)
-    |> Ash.Query.sort(desc: :heat_score)
-    |> Ash.read!()
+    segments =
+      Anderson.MemoryOS.MTM.DialogueSegment
+      |> Ash.Query.filter(agent_id == ^agent_id)
+      |> Ash.Query.load(:calculate_heat)
+      |> Ash.Query.sort(desc: :heat_score)
+      |> Ash.read!()
 
     segments_count = length(segments)
 
@@ -85,9 +87,10 @@ defmodule Anderson.MemoryOS.Workers.UpdateHeatScoreWorker do
 
   defp evict_cold_segments(segments, eviction_count) do
     # Sort by heat score ascending to get coldest segments first
-    coldest_segments = segments
-    |> Enum.sort_by(& &1.heat_score)
-    |> Enum.take(eviction_count)
+    coldest_segments =
+      segments
+      |> Enum.sort_by(& &1.heat_score)
+      |> Enum.take(eviction_count)
 
     Enum.each(coldest_segments, fn segment ->
       # Archive segment data before deletion
@@ -102,14 +105,15 @@ defmodule Anderson.MemoryOS.Workers.UpdateHeatScoreWorker do
 
   defp promote_hot_segments(segments, heat_threshold) do
     # Find segments with heat above threshold for LPM promotion
-    hot_segments = Enum.filter(segments, & &1.heat_score >= heat_threshold)
+    hot_segments = Enum.filter(segments, &(&1.heat_score >= heat_threshold))
 
-    promoted_count = Enum.reduce(hot_segments, 0, fn segment, acc ->
-      case promote_segment_to_lpm(segment) do
-        {:ok, _} -> acc + 1
-        {:error, _} -> acc
-      end
-    end)
+    promoted_count =
+      Enum.reduce(hot_segments, 0, fn segment, acc ->
+        case promote_segment_to_lpm(segment) do
+          {:ok, _} -> acc + 1
+          {:error, _} -> acc
+        end
+      end)
 
     if promoted_count > 0 do
       {:ok, "Promoted #{promoted_count} hot segments to LPM"}
@@ -123,9 +127,10 @@ defmodule Anderson.MemoryOS.Workers.UpdateHeatScoreWorker do
     # This implements the MemoryOS paper's MTM->LPM transfer
 
     # Load dialogue pages for this segment
-    pages = Anderson.MemoryOS.STM.DialoguePage
-    |> Ash.Query.filter(dialogue_segment_id == ^segment.id)
-    |> Ash.read!()
+    pages =
+      Anderson.MemoryOS.STM.DialoguePage
+      |> Ash.Query.filter(dialogue_segment_id == ^segment.id)
+      |> Ash.read!()
 
     if length(pages) > 0 do
       # Create knowledge base entry from segment content
@@ -151,9 +156,10 @@ defmodule Anderson.MemoryOS.Workers.UpdateHeatScoreWorker do
   defp synthesize_knowledge_from_segment(segment, pages) do
     # In a full implementation, this would use LLM to synthesize knowledge
     # For now, create a summary from the pages
-    page_content = Enum.map_join(pages, "\n\n", fn page ->
-      "Q: #{page.query}\nA: #{page.response}"
-    end)
+    page_content =
+      Enum.map_join(pages, "\n\n", fn page ->
+        "Q: #{page.query}\nA: #{page.response}"
+      end)
 
     """
     Topic: #{segment.topic_summary}
@@ -169,24 +175,27 @@ defmodule Anderson.MemoryOS.Workers.UpdateHeatScoreWorker do
     # In a full implementation, this would use LLM to extract personality traits
     # For now, create basic traits from interaction patterns
     interaction_count = length(pages)
-    avg_response_length = pages
-    |> Enum.map(&String.length(&1.response))
-    |> Enum.sum()
-    |> div(max(interaction_count, 1))
+
+    avg_response_length =
+      pages
+      |> Enum.map(&String.length(&1.response))
+      |> Enum.sum()
+      |> div(max(interaction_count, 1))
 
     [
       %{
         trait_name: "communication_style",
-        trait_value: (if avg_response_length > 100, do: "detailed", else: "concise"),
+        trait_value: if(avg_response_length > 100, do: "detailed", else: "concise"),
         confidence: 0.7
       },
       %{
         trait_name: "engagement_level",
-        trait_value: case interaction_count do
-          n when n > 10 -> "high"
-          n when n > 5 -> "medium"
-          _ -> "low"
-        end,
+        trait_value:
+          case interaction_count do
+            n when n > 10 -> "high"
+            n when n > 5 -> "medium"
+            _ -> "low"
+          end,
         confidence: 0.6
       }
     ]
@@ -208,12 +217,15 @@ defmodule Anderson.MemoryOS.Workers.UpdateHeatScoreWorker do
   defp get_agent_config(agent_id) do
     # Get or create configuration for this agent with defaults
     case Anderson.MemoryOS.Configuration.get_or_create(agent_id, "default", %{}) do
-      {:ok, config} -> config
+      {:ok, config} ->
+        config
+
       {:error, _} ->
         # Fallback to application defaults
         %{
           mtm_capacity: Application.get_env(:anderson, :memory_os)[:default_mtm_capacity] || 200,
-          heat_threshold: Application.get_env(:anderson, :memory_os)[:default_heat_threshold] || 5.0
+          heat_threshold:
+            Application.get_env(:anderson, :memory_os)[:default_heat_threshold] || 5.0
         }
     end
   end

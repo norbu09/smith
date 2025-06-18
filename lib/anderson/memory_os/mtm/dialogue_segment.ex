@@ -248,37 +248,38 @@ defmodule Anderson.MemoryOS.MTM.DialogueSegment do
 
   calculations do
     # Vector similarity using pgvector - will be computed when context provides query embedding
-    calculate :cosine_similarity, :float,
-      {Anderson.MemoryOS.Calculations, :segment_cosine_similarity, []},
-      public?: false,
-      description: "Calculate cosine similarity between segment embedding and query embedding"
+    calculate :cosine_similarity,
+              :float,
+              {Anderson.MemoryOS.Calculations, :segment_cosine_similarity, []},
+              public?: false,
+              description:
+                "Calculate cosine similarity between segment embedding and query embedding"
 
     # Jaccard similarity between keyword sets - will be computed when context provides query keywords
-    calculate :keyword_similarity, :float,
-      {Anderson.MemoryOS.Calculations, :segment_jaccard_similarity, []},
-      public?: false,
-      description: "Calculate Jaccard similarity between segment keywords and query keywords"
+    calculate :keyword_similarity,
+              :float,
+              {Anderson.MemoryOS.Calculations, :segment_jaccard_similarity, []},
+              public?: false,
+              description:
+                "Calculate Jaccard similarity between segment keywords and query keywords"
 
     # Final Fscore combining both measures - implements MemoryOS paper: Fscore = cos(e_s, e_p) + FJacard(K_s, K_p)
-    calculate :fscore, :float,
-      {Anderson.MemoryOS.Calculations, :segment_fscore, []},
+    calculate :fscore, :float, {Anderson.MemoryOS.Calculations, :segment_fscore, []},
       description: "Combined similarity score implementing MemoryOS Fscore formula"
 
     # Recency factor calculation - implements MemoryOS paper: R_recency = exp(-Δt / μ)
-    calculate :recency_factor, :float,
-      expr(
-        fragment("exp(-EXTRACT(EPOCH FROM (NOW() - ?)) / 1.0e7)", last_accessed)
-      ),
-      description: "Calculate recency factor based on exponential decay from MemoryOS paper"
+    calculate :recency_factor,
+              :float,
+              expr(fragment("exp(-EXTRACT(EPOCH FROM (NOW() - ?)) / 1.0e7)", last_accessed)),
+              description:
+                "Calculate recency factor based on exponential decay from MemoryOS paper"
 
     # Count of dialogue pages in this segment for heat calculation
-    calculate :page_count, :integer,
-      expr(count(dialogue_pages, field: :id)),
+    calculate :page_count, :integer, expr(count(dialogue_pages, field: :id)),
       description: "Number of dialogue pages in this segment"
 
     # Heat score calculation - implements MemoryOS paper: Heat = α·N_visit + β·L_interaction + γ·R_recency
-    calculate :calculate_heat, :float,
-      {Anderson.MemoryOS.Calculations, :segment_heat_score, []},
+    calculate :calculate_heat, :float, {Anderson.MemoryOS.Calculations, :segment_heat_score, []},
       description: "Calculate heat score based on MemoryOS paper formula with α=β=γ=1.0"
   end
 end

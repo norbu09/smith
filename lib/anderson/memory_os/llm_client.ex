@@ -41,7 +41,6 @@ defmodule Anderson.MemoryOS.LLMClient do
     with {:ok, embedding} <- generate_embedding(query),
          {:ok, keywords} <- extract_keywords(query),
          {:ok, intent} <- classify_intent(query) do
-
       query_context = %{
         query_embedding: embedding,
         query_keywords: keywords,
@@ -77,23 +76,28 @@ defmodule Anderson.MemoryOS.LLMClient do
     agent_id = query_context.agent_id
 
     # Configure retrieval limits
-    limits = Map.merge(%{
-      stm_limit: 5,
-      mtm_limit: 10,
-      lpm_limit: 8,
-      system_limit: 3
-    }, retrieval_options[:limits] || %{})
+    limits =
+      Map.merge(
+        %{
+          stm_limit: 5,
+          mtm_limit: 10,
+          lpm_limit: 8,
+          system_limit: 3
+        },
+        retrieval_options[:limits] || %{}
+      )
 
     # Parallel memory retrieval
     retrieval_tasks = [
       Task.async(fn -> retrieve_stm_memories(agent_id, query_context, limits.stm_limit) end),
       Task.async(fn -> retrieve_mtm_memories(agent_id, query_context, limits.mtm_limit) end),
-              Task.async(fn -> retrieve_lpm_memories(agent_id, query_context, limits.lpm_limit) end),
+      Task.async(fn -> retrieve_lpm_memories(agent_id, query_context, limits.lpm_limit) end),
       Task.async(fn -> retrieve_system_memories(query_context, limits.system_limit) end)
     ]
 
     # Wait for all retrieval tasks
-    [stm_results, mtm_results, lpm_results, system_results] = Task.await_many(retrieval_tasks, 30_000)
+    [stm_results, mtm_results, lpm_results, system_results] =
+      Task.await_many(retrieval_tasks, 30_000)
 
     memory_results = %{
       stm_results: stm_results,
@@ -175,7 +179,8 @@ defmodule Anderson.MemoryOS.LLMClient do
     if is_nil(text) or (is_binary(text) and String.length(text) == 0) do
       {:error, "Empty text provided"}
     else
-      use_mock = model_options[:use_mock] || Application.get_env(:anderson, :use_mock_embeddings, false)
+      use_mock =
+        model_options[:use_mock] || Application.get_env(:anderson, :use_mock_embeddings, false)
 
       if use_mock do
         # Use mock embedding for testing/development
@@ -219,15 +224,17 @@ defmodule Anderson.MemoryOS.LLMClient do
 
   defp retrieve_lpm_memories(agent_id, _query_context, limit) do
     # Retrieve knowledge base entries and traits for the agent
-    kb_entries = Anderson.MemoryOS.LPM.KnowledgeBaseEntry
-    |> Ash.Query.filter(agent_id: agent_id)
-    |> Ash.Query.limit(limit)
-    |> Ash.read!()
+    kb_entries =
+      Anderson.MemoryOS.LPM.KnowledgeBaseEntry
+      |> Ash.Query.filter(agent_id: agent_id)
+      |> Ash.Query.limit(limit)
+      |> Ash.read!()
 
-    traits = Anderson.MemoryOS.LPM.TraitEntry
-    |> Ash.Query.filter(agent_id: agent_id)
-    |> Ash.Query.limit(limit)
-    |> Ash.read!()
+    traits =
+      Anderson.MemoryOS.LPM.TraitEntry
+      |> Ash.Query.filter(agent_id: agent_id)
+      |> Ash.Query.limit(limit)
+      |> Ash.read!()
 
     %{knowledge_entries: kb_entries, traits: traits}
   rescue
@@ -246,15 +253,16 @@ defmodule Anderson.MemoryOS.LLMClient do
 
   defp extract_keywords(text) do
     # Simple keyword extraction - in production would use NLP models
-    keywords = text
-    |> String.downcase()
-    |> String.replace(~r/[^\w\s]/, "")
-    |> String.split()
-    |> Enum.filter(&(String.length(&1) > 3))
-    |> Enum.frequencies()
-    |> Enum.sort_by(fn {_word, freq} -> -freq end)
-    |> Enum.take(10)
-    |> Enum.map(fn {word, _freq} -> word end)
+    keywords =
+      text
+      |> String.downcase()
+      |> String.replace(~r/[^\w\s]/, "")
+      |> String.split()
+      |> Enum.filter(&(String.length(&1) > 3))
+      |> Enum.frequencies()
+      |> Enum.sort_by(fn {_word, freq} -> -freq end)
+      |> Enum.take(10)
+      |> Enum.map(fn {word, _freq} -> word end)
 
     {:ok, keywords}
   end
@@ -264,10 +272,26 @@ defmodule Anderson.MemoryOS.LLMClient do
     text_lower = String.downcase(text)
 
     topics = []
-    topics = if String.contains?(text_lower, ["help", "how", "what", "explain"]), do: ["information_seeking" | topics], else: topics
-    topics = if String.contains?(text_lower, ["create", "make", "build", "implement"]), do: ["task_execution" | topics], else: topics
-    topics = if String.contains?(text_lower, ["remember", "recall", "memory", "past"]), do: ["memory_query" | topics], else: topics
-    topics = if String.contains?(text_lower, ["learn", "understand", "know"]), do: ["learning" | topics], else: topics
+
+    topics =
+      if String.contains?(text_lower, ["help", "how", "what", "explain"]),
+        do: ["information_seeking" | topics],
+        else: topics
+
+    topics =
+      if String.contains?(text_lower, ["create", "make", "build", "implement"]),
+        do: ["task_execution" | topics],
+        else: topics
+
+    topics =
+      if String.contains?(text_lower, ["remember", "recall", "memory", "past"]),
+        do: ["memory_query" | topics],
+        else: topics
+
+    topics =
+      if String.contains?(text_lower, ["learn", "understand", "know"]),
+        do: ["learning" | topics],
+        else: topics
 
     topics = if Enum.empty?(topics), do: ["general"], else: topics
     {:ok, topics}
@@ -283,11 +307,12 @@ defmodule Anderson.MemoryOS.LLMClient do
     positive_count = Enum.count(positive_indicators, &String.contains?(text_lower, &1))
     negative_count = Enum.count(negative_indicators, &String.contains?(text_lower, &1))
 
-    sentiment = cond do
-      positive_count > negative_count -> "positive"
-      negative_count > positive_count -> "negative"
-      true -> "neutral"
-    end
+    sentiment =
+      cond do
+        positive_count > negative_count -> "positive"
+        negative_count > positive_count -> "negative"
+        true -> "neutral"
+      end
 
     {:ok, sentiment}
   end
@@ -295,10 +320,11 @@ defmodule Anderson.MemoryOS.LLMClient do
   defp extract_entities(text) do
     # Simple entity extraction - in production would use NER models
     # For now, just extract capitalized words as potential entities
-    entities = text
-    |> String.split()
-    |> Enum.filter(&String.match?(&1, ~r/^[A-Z][a-z]+/))
-    |> Enum.uniq()
+    entities =
+      text
+      |> String.split()
+      |> Enum.filter(&String.match?(&1, ~r/^[A-Z][a-z]+/))
+      |> Enum.uniq()
 
     {:ok, entities}
   end
@@ -306,11 +332,13 @@ defmodule Anderson.MemoryOS.LLMClient do
   defp generate_summary(text) do
     # Simple summarization - first sentence or truncated version
     sentences = String.split(text, ~r/[.!?]+/)
-    summary = if length(sentences) > 0 do
-      sentences |> List.first() |> String.trim()
-    else
-      String.slice(text, 0, 100) <> "..."
-    end
+
+    summary =
+      if length(sentences) > 0 do
+        sentences |> List.first() |> String.trim()
+      else
+        String.slice(text, 0, 100) <> "..."
+      end
 
     {:ok, summary}
   end
@@ -318,13 +346,23 @@ defmodule Anderson.MemoryOS.LLMClient do
   defp classify_intent(query) do
     query_lower = String.downcase(query)
 
-    intent = cond do
-      String.contains?(query_lower, ["?", "how", "what", "why", "when", "where"]) -> "question"
-      String.contains?(query_lower, ["create", "make", "build", "generate"]) -> "creation"
-      String.contains?(query_lower, ["remember", "recall", "what did", "previously"]) -> "memory_recall"
-      String.contains?(query_lower, ["help", "assist", "support"]) -> "assistance"
-      true -> "general"
-    end
+    intent =
+      cond do
+        String.contains?(query_lower, ["?", "how", "what", "why", "when", "where"]) ->
+          "question"
+
+        String.contains?(query_lower, ["create", "make", "build", "generate"]) ->
+          "creation"
+
+        String.contains?(query_lower, ["remember", "recall", "what did", "previously"]) ->
+          "memory_recall"
+
+        String.contains?(query_lower, ["help", "assist", "support"]) ->
+          "assistance"
+
+        true ->
+          "general"
+      end
 
     {:ok, intent}
   end
@@ -352,7 +390,9 @@ defmodule Anderson.MemoryOS.LLMClient do
 
     all_memories
     |> Enum.flat_map(fn {memories, type, base_score} ->
-      memories |> Enum.with_index() |> Enum.map(fn {memory, index} ->
+      memories
+      |> Enum.with_index()
+      |> Enum.map(fn {memory, index} ->
         # Decay score by position
         score = base_score * (1.0 / (index + 1))
         {memory, type, score}
@@ -385,22 +425,24 @@ defmodule Anderson.MemoryOS.LLMClient do
 
   defp format_lpm_context(lpm_results) do
     %{
-      knowledge: Enum.map(lpm_results.knowledge_entries || [], fn entry ->
-        %{
-          content: entry.content,
-          topic: entry.topic_summary,
-          keywords: entry.keywords,
-          type: :agent_knowledge
-        }
-      end),
-      traits: Enum.map(lpm_results.traits || [], fn trait ->
-        %{
-          trait_name: trait.trait_name,
-          trait_value: trait.trait_value,
-          confidence: trait.confidence,
-          type: :personality_trait
-        }
-      end)
+      knowledge:
+        Enum.map(lpm_results.knowledge_entries || [], fn entry ->
+          %{
+            content: entry.content,
+            topic: entry.topic_summary,
+            keywords: entry.keywords,
+            type: :agent_knowledge
+          }
+        end),
+      traits:
+        Enum.map(lpm_results.traits || [], fn trait ->
+          %{
+            trait_name: trait.trait_name,
+            trait_value: trait.trait_value,
+            confidence: trait.confidence,
+            type: :personality_trait
+          }
+        end)
     }
   end
 
@@ -419,19 +461,21 @@ defmodule Anderson.MemoryOS.LLMClient do
     total_memories = length(ranked_memories)
 
     if total_memories > 0 do
-      avg_score = ranked_memories
-      |> Enum.map(fn {_memory, _type, score} -> score end)
-      |> Enum.sum()
-      |> Kernel./(total_memories)
+      avg_score =
+        ranked_memories
+        |> Enum.map(fn {_memory, _type, score} -> score end)
+        |> Enum.sum()
+        |> Kernel./(total_memories)
 
       %{
         average_relevance: avg_score,
         memory_count: total_memories,
-        confidence_level: case avg_score do
-          score when score > 0.7 -> "high"
-          score when score > 0.4 -> "medium"
-          _ -> "low"
-        end
+        confidence_level:
+          case avg_score do
+            score when score > 0.7 -> "high"
+            score when score > 0.4 -> "medium"
+            _ -> "low"
+          end
       }
     else
       %{average_relevance: 0.0, memory_count: 0, confidence_level: "none"}

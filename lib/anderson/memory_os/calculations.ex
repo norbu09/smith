@@ -22,7 +22,8 @@ defmodule Anderson.MemoryOS.Calculations do
   ## Returns
   - Float: Jaccard similarity score between 0.0 and 1.0
   """
-  def jaccard_similarity(segment_keywords, query_keywords) when is_list(segment_keywords) and is_list(query_keywords) do
+  def jaccard_similarity(segment_keywords, query_keywords)
+      when is_list(segment_keywords) and is_list(query_keywords) do
     segment_set = MapSet.new(segment_keywords)
     query_set = MapSet.new(query_keywords)
 
@@ -58,17 +59,19 @@ defmodule Anderson.MemoryOS.Calculations do
   ## Returns
   - Float: Cosine similarity score between -1.0 and 1.0
   """
-  def cosine_similarity(embedding1, embedding2) when is_list(embedding1) and is_list(embedding2) do
+  def cosine_similarity(embedding1, embedding2)
+      when is_list(embedding1) and is_list(embedding2) do
     if length(embedding1) != length(embedding2) or length(embedding1) == 0 do
       0.0
     else
       # Calculate dot product
-      dot_product = Enum.zip(embedding1, embedding2)
-        |> Enum.reduce(0.0, fn {a, b}, acc -> acc + (a * b) end)
+      dot_product =
+        Enum.zip(embedding1, embedding2)
+        |> Enum.reduce(0.0, fn {a, b}, acc -> acc + a * b end)
 
       # Calculate magnitudes
-      magnitude1 = :math.sqrt(Enum.reduce(embedding1, 0.0, fn x, acc -> acc + (x * x) end))
-      magnitude2 = :math.sqrt(Enum.reduce(embedding2, 0.0, fn x, acc -> acc + (x * x) end))
+      magnitude1 = :math.sqrt(Enum.reduce(embedding1, 0.0, fn x, acc -> acc + x * x end))
+      magnitude2 = :math.sqrt(Enum.reduce(embedding2, 0.0, fn x, acc -> acc + x * x end))
 
       if magnitude1 == 0.0 or magnitude2 == 0.0 do
         0.0
@@ -132,7 +135,14 @@ defmodule Anderson.MemoryOS.Calculations do
   ## Returns
   - Float: Heat score
   """
-  def calculate_heat_score(visit_count, interaction_count, recency_factor, alpha \\ 1.0, beta \\ 1.0, gamma \\ 1.0) do
+  def calculate_heat_score(
+        visit_count,
+        interaction_count,
+        recency_factor,
+        alpha \\ 1.0,
+        beta \\ 1.0,
+        gamma \\ 1.0
+      ) do
     alpha * visit_count + beta * interaction_count + gamma * recency_factor
   end
 
@@ -221,11 +231,12 @@ defmodule Anderson.MemoryOS.Calculations do
 
     visit_count = segment.visit_count || 0
     # Calculate page count from loaded relationship
-    page_count = if segment.dialogue_pages do
-      length(segment.dialogue_pages)
-    else
-      0
-    end
+    page_count =
+      if segment.dialogue_pages do
+        length(segment.dialogue_pages)
+      else
+        0
+      end
 
     recency_factor = calculate_recency_factor(segment.last_accessed)
 

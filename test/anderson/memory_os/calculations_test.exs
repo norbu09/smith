@@ -90,12 +90,21 @@ defmodule Anderson.MemoryOS.CalculationsTest do
     test "calculates correct Fscore using paper formula" do
       # Fscore = cos(e_s, e_p) + FJacard(K_s, K_p)
       page_embedding = [1.0, 0.0]
-      segment_embedding = [0.5, :math.sqrt(3) / 2]  # 60 degree angle, cos = 0.5
+      # 60 degree angle, cos = 0.5
+      segment_embedding = [0.5, :math.sqrt(3) / 2]
       page_keywords = ["memory", "agent"]
-      segment_keywords = ["memory", "system"]  # Jaccard = 1/3 ≈ 0.333
+      # Jaccard = 1/3 ≈ 0.333
+      segment_keywords = ["memory", "system"]
 
       expected_fscore = 0.5 + 0.3333333333333333
-      result = Calculations.calculate_fscore(page_embedding, segment_embedding, page_keywords, segment_keywords)
+
+      result =
+        Calculations.calculate_fscore(
+          page_embedding,
+          segment_embedding,
+          page_keywords,
+          segment_keywords
+        )
 
       assert abs(result - expected_fscore) < 0.0001
     end
@@ -111,17 +120,26 @@ defmodule Anderson.MemoryOS.CalculationsTest do
 
     test "handles completely different content" do
       page_embedding = [1.0, 0.0]
-      segment_embedding = [-1.0, 0.0]  # Opposite vectors, cos = -1.0
+      # Opposite vectors, cos = -1.0
+      segment_embedding = [-1.0, 0.0]
       page_keywords = ["word1", "word2"]
-      segment_keywords = ["word3", "word4"]  # Disjoint sets, jaccard = 0.0
+      # Disjoint sets, jaccard = 0.0
+      segment_keywords = ["word3", "word4"]
 
       # cos(-1.0) + jaccard(0.0) = -1.0 + 0.0 = -1.0
-      result = Calculations.calculate_fscore(page_embedding, segment_embedding, page_keywords, segment_keywords)
+      result =
+        Calculations.calculate_fscore(
+          page_embedding,
+          segment_embedding,
+          page_keywords,
+          segment_keywords
+        )
+
       assert result == -1.0
     end
   end
 
-    describe "calculate_recency_factor/2" do
+  describe "calculate_recency_factor/2" do
     test "returns 1.0 for zero time difference" do
       now = DateTime.utc_now()
       result = Calculations.calculate_recency_factor(now)
@@ -139,7 +157,8 @@ defmodule Anderson.MemoryOS.CalculationsTest do
     end
 
     test "approaches 0 for very old timestamps" do
-      very_old = DateTime.add(DateTime.utc_now(), -100_000_000, :second)  # Much older than μ
+      # Much older than μ
+      very_old = DateTime.add(DateTime.utc_now(), -100_000_000, :second)
 
       result = Calculations.calculate_recency_factor(very_old)
 
@@ -149,7 +168,8 @@ defmodule Anderson.MemoryOS.CalculationsTest do
 
     test "handles custom time constant" do
       one_hour_ago = DateTime.add(DateTime.utc_now(), -3600, :second)
-      time_constant = 5.0e6  # Different μ value
+      # Different μ value
+      time_constant = 5.0e6
 
       result = Calculations.calculate_recency_factor(one_hour_ago, time_constant)
       expected = :math.exp(-3600 / time_constant)
@@ -157,7 +177,7 @@ defmodule Anderson.MemoryOS.CalculationsTest do
     end
   end
 
-    describe "calculate_heat_score/6" do
+  describe "calculate_heat_score/6" do
     test "calculates heat using paper formula" do
       # Heat = α·N_visit + β·L_interaction + γ·R_recency
       # With α = β = γ = 1.0 (from paper)
@@ -168,7 +188,15 @@ defmodule Anderson.MemoryOS.CalculationsTest do
 
       expected_heat = 1.0 * visit_count + 1.0 * interaction_count + 1.0 * recency_factor
 
-      result = Calculations.calculate_heat_score(visit_count, interaction_count, recency_factor, 1.0, 1.0, 1.0)
+      result =
+        Calculations.calculate_heat_score(
+          visit_count,
+          interaction_count,
+          recency_factor,
+          1.0,
+          1.0,
+          1.0
+        )
 
       assert abs(result - expected_heat) < 0.0001
     end
@@ -184,7 +212,15 @@ defmodule Anderson.MemoryOS.CalculationsTest do
 
       expected_heat = alpha * visit_count + beta * interaction_count + gamma * recency_factor
 
-      result = Calculations.calculate_heat_score(visit_count, interaction_count, recency_factor, alpha, beta, gamma)
+      result =
+        Calculations.calculate_heat_score(
+          visit_count,
+          interaction_count,
+          recency_factor,
+          alpha,
+          beta,
+          gamma
+        )
 
       assert abs(result - expected_heat) < 0.0001
     end
@@ -197,21 +233,24 @@ defmodule Anderson.MemoryOS.CalculationsTest do
     end
   end
 
-    describe "segment_fscore/2" do
+  describe "segment_fscore/2" do
     test "calculates Fscore for dialogue segment context" do
       # Mock segment data
       segment = %{
-        embedding: [0.0, 1.0],  # Orthogonal to context vector
+        # Orthogonal to context vector
+        embedding: [0.0, 1.0],
         keywords: ["memory", "system"]
       }
 
       context = %{
         query_embedding: [1.0, 0.0],
-        query_keywords: ["memory", "agent"]  # Jaccard = 1/3
+        # Jaccard = 1/3
+        query_keywords: ["memory", "agent"]
       }
 
       result = Calculations.segment_fscore(segment, context)
-      expected = 0.0 + 0.3333333333333333  # cos + jaccard
+      # cos + jaccard
+      expected = 0.0 + 0.3333333333333333
 
       assert abs(result - expected) < 0.0001
     end
@@ -229,11 +268,13 @@ defmodule Anderson.MemoryOS.CalculationsTest do
   describe "segment_heat_score/2" do
     test "calculates heat score for dialogue segment" do
       # Mock segment with last_accessed
-      last_accessed = DateTime.add(DateTime.utc_now(), -7200, :second)  # 2 hours ago
+      # 2 hours ago
+      last_accessed = DateTime.add(DateTime.utc_now(), -7200, :second)
 
       segment = %{
         visit_count: 3,
-        dialogue_pages: [1, 2, 3, 4, 5],  # 5 pages for interaction length
+        # 5 pages for interaction length
+        dialogue_pages: [1, 2, 3, 4, 5],
         last_accessed: last_accessed
       }
 
@@ -282,7 +323,8 @@ defmodule Anderson.MemoryOS.CalculationsTest do
       vector_b = [-1.0, 2.0, -3.0, 4.0]
 
       result = Calculations.cosine_similarity(vector_a, vector_b)
-      assert result == -1.0  # Opposite vectors
+      # Opposite vectors
+      assert result == -1.0
     end
 
     test "jaccard similarity handles various data types as strings" do
@@ -291,7 +333,8 @@ defmodule Anderson.MemoryOS.CalculationsTest do
 
       # Should convert to strings and calculate
       result = Calculations.jaccard_similarity(set_a, set_b)
-      assert result == 0.5  # 2 common elements out of 4 total
+      # 2 common elements out of 4 total
+      assert result == 0.5
     end
   end
 end

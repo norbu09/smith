@@ -283,9 +283,13 @@ defmodule Anderson.MemoryOS.AgentIntegrationTest do
 
         # Should handle gracefully
         case result do
-          {:ok, _} -> :ok  # Acceptable
+          # Acceptable
+          {:ok, _} ->
+            :ok
+
           {:error, reason} ->
-            assert is_binary(reason)  # Should have error message
+            # Should have error message
+            assert is_binary(reason)
         end
       end
     end

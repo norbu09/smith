@@ -54,19 +54,22 @@ defmodule Anderson.MemoryOS.Workers.LpmSystemTransferWorker do
 
   defp evaluate_agent_lpm_for_promotion(agent_id) do
     # Get all knowledge base entries for this agent
-    entries = Anderson.MemoryOS.LPM.KnowledgeBaseEntry
-    |> Ash.Query.filter(agent_id == ^agent_id)
-    |> Ash.read!()
+    entries =
+      Anderson.MemoryOS.LPM.KnowledgeBaseEntry
+      |> Ash.Query.filter(agent_id == ^agent_id)
+      |> Ash.read!()
 
-    promoted_count = Enum.reduce(entries, 0, fn entry, acc ->
-      case evaluate_and_promote_entry(entry) do
-        {:ok, _message} -> acc
-        {:promoted, _} -> acc + 1
-        {:error, _} -> acc
-      end
-    end)
+    promoted_count =
+      Enum.reduce(entries, 0, fn entry, acc ->
+        case evaluate_and_promote_entry(entry) do
+          {:ok, _message} -> acc
+          {:promoted, _} -> acc + 1
+          {:error, _} -> acc
+        end
+      end)
 
-    {:ok, "Evaluated #{length(entries)} LPM entries for agent #{agent_id}, promoted #{promoted_count}"}
+    {:ok,
+     "Evaluated #{length(entries)} LPM entries for agent #{agent_id}, promoted #{promoted_count}"}
   end
 
   defp calculate_system_importance(entry) do
@@ -85,12 +88,11 @@ defmodule Anderson.MemoryOS.Workers.LpmSystemTransferWorker do
     complexity_score = calculate_content_complexity(entry)
 
     # Weighted combination
-    importance_score = (
+    importance_score =
       0.3 * cross_agent_score +
-      0.3 * utility_score +
-      0.2 * reference_score +
-      0.2 * complexity_score
-    )
+        0.3 * utility_score +
+        0.2 * reference_score +
+        0.2 * complexity_score
 
     Float.round(importance_score, 4)
   end
@@ -102,13 +104,30 @@ defmodule Anderson.MemoryOS.Workers.LpmSystemTransferWorker do
 
     # Check for general vs agent-specific content
     general_indicators = [
-      "general", "common", "standard", "typical", "universal", "basic",
-      "fundamental", "principle", "rule", "fact", "concept"
+      "general",
+      "common",
+      "standard",
+      "typical",
+      "universal",
+      "basic",
+      "fundamental",
+      "principle",
+      "rule",
+      "fact",
+      "concept"
     ]
 
     specific_indicators = [
-      "personal", "prefer", "my", "i", "me", "custom", "specific",
-      "individual", "unique", "particular"
+      "personal",
+      "prefer",
+      "my",
+      "i",
+      "me",
+      "custom",
+      "specific",
+      "individual",
+      "unique",
+      "particular"
     ]
 
     content_lower = String.downcase(content)
@@ -133,18 +152,39 @@ defmodule Anderson.MemoryOS.Workers.LpmSystemTransferWorker do
 
     # Look for actionable content
     actionable_indicators = [
-      "how to", "steps", "process", "method", "technique", "approach",
-      "solution", "fix", "resolve", "implement", "execute", "perform"
+      "how to",
+      "steps",
+      "process",
+      "method",
+      "technique",
+      "approach",
+      "solution",
+      "fix",
+      "resolve",
+      "implement",
+      "execute",
+      "perform"
     ]
 
     # Look for informational content
     informational_indicators = [
-      "definition", "explanation", "concept", "theory", "principle",
-      "fact", "data", "information", "knowledge", "understanding"
+      "definition",
+      "explanation",
+      "concept",
+      "theory",
+      "principle",
+      "fact",
+      "data",
+      "information",
+      "knowledge",
+      "understanding"
     ]
 
-    actionable_score = Enum.count(actionable_indicators, &String.contains?(content_lower, &1)) * 0.1
-    informational_score = Enum.count(informational_indicators, &String.contains?(content_lower, &1)) * 0.05
+    actionable_score =
+      Enum.count(actionable_indicators, &String.contains?(content_lower, &1)) * 0.1
+
+    informational_score =
+      Enum.count(informational_indicators, &String.contains?(content_lower, &1)) * 0.05
 
     # Content length factor (longer content often more comprehensive)
     length_factor = min(String.length(content) / 1000.0, 1.0)
@@ -178,8 +218,16 @@ defmodule Anderson.MemoryOS.Workers.LpmSystemTransferWorker do
 
     # Technical term density
     technical_terms = [
-      "algorithm", "implementation", "architecture", "framework", "protocol",
-      "optimization", "configuration", "integration", "methodology", "analysis"
+      "algorithm",
+      "implementation",
+      "architecture",
+      "framework",
+      "protocol",
+      "optimization",
+      "configuration",
+      "integration",
+      "methodology",
+      "analysis"
     ]
 
     content_lower = String.downcase(content)
@@ -187,12 +235,14 @@ defmodule Anderson.MemoryOS.Workers.LpmSystemTransferWorker do
 
     # Sentence complexity (longer sentences suggest more complex ideas)
     sentences = String.split(content, ~r/[.!?]+/)
-    avg_sentence_length = if length(sentences) > 0 do
-      total_words = sentences |> Enum.map(&(String.split(&1) |> length())) |> Enum.sum()
-      total_words / length(sentences)
-    else
-      0
-    end
+
+    avg_sentence_length =
+      if length(sentences) > 0 do
+        total_words = sentences |> Enum.map(&(String.split(&1) |> length())) |> Enum.sum()
+        total_words / length(sentences)
+      else
+        0
+      end
 
     sentence_complexity = min(avg_sentence_length / 20.0, 0.3)
 
@@ -202,10 +252,10 @@ defmodule Anderson.MemoryOS.Workers.LpmSystemTransferWorker do
   defp promote_to_system_memory(entry, importance_score) do
     # Create SystemMemory entry from LPM entry
     case Anderson.MemoryOS.SystemMemory.contribute(
-      entry.content,
-      entry.agent_id,
-      importance_score
-    ) do
+           entry.content,
+           entry.agent_id,
+           importance_score
+         ) do
       {:ok, system_entry} ->
         # Mark the LPM entry as promoted
         entry
@@ -214,7 +264,8 @@ defmodule Anderson.MemoryOS.Workers.LpmSystemTransferWorker do
         |> Ash.Changeset.change_attribute(:system_memory_id, system_entry.id)
         |> Ash.update!()
 
-        {:promoted, "Promoted LPM entry #{entry.id} to SystemMemory with importance #{importance_score}"}
+        {:promoted,
+         "Promoted LPM entry #{entry.id} to SystemMemory with importance #{importance_score}"}
 
       {:error, error} ->
         {:error, "Failed to promote entry to SystemMemory: #{inspect(error)}"}
@@ -227,21 +278,24 @@ defmodule Anderson.MemoryOS.Workers.LpmSystemTransferWorker do
     max_entries = config.system_memory_max_entries || 1000
 
     # Get all system memory entries ordered by importance
-    entries = Anderson.MemoryOS.SystemMemory
-    |> Ash.Query.sort(desc: :importance_score)
-    |> Ash.read!()
+    entries =
+      Anderson.MemoryOS.SystemMemory
+      |> Ash.Query.sort(desc: :importance_score)
+      |> Ash.read!()
 
     entries_count = length(entries)
 
     if entries_count > max_entries do
       # Evict lowest importance entries
-      entries_to_evict = entries
-      |> Enum.drop(max_entries)
-      |> length()
+      entries_to_evict =
+        entries
+        |> Enum.drop(max_entries)
+        |> length()
 
-      evicted_entries = entries
-      |> Enum.reverse()
-      |> Enum.take(entries_to_evict)
+      evicted_entries =
+        entries
+        |> Enum.reverse()
+        |> Enum.take(entries_to_evict)
 
       Enum.each(evicted_entries, fn entry ->
         # Archive before deletion
@@ -259,13 +313,17 @@ defmodule Anderson.MemoryOS.Workers.LpmSystemTransferWorker do
     # In a full implementation, this would archive the entry
     # For now, just log the eviction
     require Logger
-    Logger.info("Evicting SystemMemory entry #{entry.id} with importance #{entry.importance_score}")
+
+    Logger.info(
+      "Evicting SystemMemory entry #{entry.id} with importance #{entry.importance_score}"
+    )
   end
 
   defp get_system_config do
     # Get system-wide configuration
     %{
-      system_memory_importance_threshold: Application.get_env(:anderson, :memory_os)[:default_importance_threshold] || 0.8,
+      system_memory_importance_threshold:
+        Application.get_env(:anderson, :memory_os)[:default_importance_threshold] || 0.8,
       system_memory_max_entries: 1000
     }
   end

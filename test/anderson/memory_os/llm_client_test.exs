@@ -18,7 +18,7 @@ defmodule Anderson.MemoryOS.LLMClientTest do
       assert length(query_context.query_embedding) > 0
     end
 
-        test "classifies different intent types correctly" do
+    test "classifies different intent types correctly" do
       agent_id = Ash.UUID.generate()
 
       test_cases = [
@@ -33,7 +33,14 @@ defmodule Anderson.MemoryOS.LLMClientTest do
         {:ok, query_context} = LLMClient.process_query(query, agent_id)
         # Since we're using mock classification, just verify it returns a valid intent
         assert is_binary(query_context.intent)
-        assert query_context.intent in ["question", "creation", "memory_recall", "assistance", "general"]
+
+        assert query_context.intent in [
+                 "question",
+                 "creation",
+                 "memory_recall",
+                 "assistance",
+                 "general"
+               ]
       end
     end
 
@@ -67,7 +74,8 @@ defmodule Anderson.MemoryOS.LLMClientTest do
       {:ok, embedding} = LLMClient.generate_embedding(text, use_mock: true)
 
       assert is_list(embedding)
-      assert length(embedding) == 384  # Mock embedding dimensions
+      # Mock embedding dimensions
+      assert length(embedding) == 384
       assert Enum.all?(embedding, &is_number/1)
     end
 
@@ -145,7 +153,8 @@ defmodule Anderson.MemoryOS.LLMClientTest do
     end
 
     test "generates summaries" do
-      text = "This is a long document about artificial intelligence. It covers machine learning algorithms. Neural networks are discussed in detail."
+      text =
+        "This is a long document about artificial intelligence. It covers machine learning algorithms. Neural networks are discussed in detail."
 
       {:ok, summary} = LLMClient.extract_information(text, :summary)
 
