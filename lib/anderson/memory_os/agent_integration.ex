@@ -17,6 +17,7 @@ defmodule Anderson.MemoryOS.AgentIntegration do
   alias Anderson.MemoryOS.LLMClient
 
   require Logger
+  require Ash.Query
 
   @doc """
   Process an agent interaction with full MemoryOS integration.
@@ -88,8 +89,13 @@ defmodule Anderson.MemoryOS.AgentIntegration do
       {:ok, config}
     else
       {:error, reason} = error ->
-        Logger.error("Failed to initialize agent #{agent_id}: #{reason}")
-        error
+        error_msg = case reason do
+          %{message: msg} when is_binary(msg) -> msg
+          reason when is_binary(reason) -> reason
+          _ -> "Failed to initialize agent configuration"
+        end
+        Logger.error("Failed to initialize agent #{agent_id}: #{error_msg}")
+        {:error, error_msg}
     end
   end
 

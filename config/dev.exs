@@ -85,3 +85,10 @@ config :phoenix_live_view,
 
 # Disable swoosh api client as it is only required for production adapters.
 config :swoosh, :api_client, false
+
+# MemoryOS configuration for development
+config :anderson,
+  # Use mock embeddings in development unless OpenAI API key is available
+  use_mock_embeddings: System.get_env("OPENAI_API_KEY") == nil,
+  # OpenAI API key for embedding generation (can be set via environment variable)
+  openai_api_key: System.get_env("OPENAI_API_KEY")

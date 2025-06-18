@@ -36,3 +36,10 @@ config :phoenix, :plug_init_mode, :runtime
 # Enable helpful, but potentially expensive runtime checks
 config :phoenix_live_view,
   enable_expensive_runtime_checks: true
+
+# MemoryOS configuration for test environment
+config :anderson,
+  # Always use mock embeddings in test environment
+  use_mock_embeddings: true,
+  # No OpenAI API key needed for tests
+  openai_api_key: nil

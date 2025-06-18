@@ -16,6 +16,7 @@ defmodule Anderson.MemoryOS.LLMClient do
   """
 
   require Logger
+  require Ash.Query
 
   @doc """
   Process a user query and generate appropriate memory retrieval context.
@@ -87,7 +88,7 @@ defmodule Anderson.MemoryOS.LLMClient do
     retrieval_tasks = [
       Task.async(fn -> retrieve_stm_memories(agent_id, query_context, limits.stm_limit) end),
       Task.async(fn -> retrieve_mtm_memories(agent_id, query_context, limits.mtm_limit) end),
-      Task.async(fn -> retrieve_lpm_memories(agent_id, query_context, limits.lmp_limit) end),
+              Task.async(fn -> retrieve_lpm_memories(agent_id, query_context, limits.lpm_limit) end),
       Task.async(fn -> retrieve_system_memories(query_context, limits.system_limit) end)
     ]
 
@@ -169,17 +170,25 @@ defmodule Anderson.MemoryOS.LLMClient do
   - {:ok, embedding_vector}
   - {:error, reason}
   """
-  def generate_embedding(text, _model_options \\ %{}) do
-    # In a full implementation, this would use the configured embedding model
-    # For now, return a mock embedding vector
-    # This would integrate with Anderson.OpenAiEmbeddingModel
-
-    if String.length(text) == 0 do
+  def generate_embedding(text, model_options \\ %{}) do
+    # Use real embedding generation with Anderson.OpenAiEmbeddingModel
+    if is_nil(text) or (is_binary(text) and String.length(text) == 0) do
       {:error, "Empty text provided"}
     else
-      # Mock embedding generation - in reality would call OpenAI or similar
-      mock_embedding = generate_mock_embedding(text)
-      {:ok, mock_embedding}
+      use_mock = model_options[:use_mock] || Application.get_env(:anderson, :use_mock_embeddings, false)
+
+      if use_mock do
+        # Use mock embedding for testing/development
+        mock_embedding = generate_mock_embedding(text)
+        {:ok, mock_embedding}
+      else
+        # Use real OpenAI embedding model
+        case Anderson.OpenAiEmbeddingModel.generate([text], model_options) do
+          {:ok, [embedding]} -> {:ok, embedding}
+          {:ok, embeddings} when is_list(embeddings) -> {:ok, List.first(embeddings)}
+          {:error, reason} -> {:error, reason}
+        end
+      end
     end
   end
 
