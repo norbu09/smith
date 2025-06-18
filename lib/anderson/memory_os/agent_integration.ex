@@ -60,9 +60,9 @@ defmodule Anderson.MemoryOS.AgentIntegration do
       Logger.info("Successfully processed interaction for agent #{agent_id}")
       {:ok, result}
     else
-      {:error, reason} = error ->
+      {:error, reason} = _error ->
         Logger.error("Failed to process interaction for agent #{agent_id}: #{reason}")
-        error
+        {:error, reason}
     end
   end
 
@@ -88,7 +88,7 @@ defmodule Anderson.MemoryOS.AgentIntegration do
       Logger.info("Successfully initialized MemoryOS for agent #{agent_id}")
       {:ok, config}
     else
-      {:error, reason} = error ->
+      {:error, reason} = _error ->
         error_msg = case reason do
           %{message: msg} when is_binary(msg) -> msg
           reason when is_binary(reason) -> reason
@@ -219,9 +219,9 @@ defmodule Anderson.MemoryOS.AgentIntegration do
 
       {:ok, search_results}
     else
-      {:error, reason} = error ->
+      {:error, reason} = _error ->
         Logger.error("Memory search failed for agent #{agent_id}: #{reason}")
-        error
+        {:error, reason}
     end
   end
 

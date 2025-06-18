@@ -62,7 +62,10 @@ defmodule Anderson.MemoryOS.Workers.CheckSTMCapacityWorker do
     case best_segment do
       {:ok, segment} ->
         # Add page to existing segment
-        Anderson.MemoryOS.MTM.DialogueSegment.add_page_to_segment(segment.id, page.id)
+        case Ash.update(segment, :add_page_to_segment, %{id: segment.id, page_id: page.id}) do
+          {:ok, _updated_segment} -> :ok
+          {:error, error} -> {:error, "Failed to add page to segment: #{inspect(error)}"}
+        end
 
       {:not_found, _reason} ->
         # Create a new segment from this page
