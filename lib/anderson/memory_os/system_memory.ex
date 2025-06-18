@@ -13,37 +13,44 @@ defmodule Anderson.MemoryOS.SystemMemory do
   postgres do
     table "memory_system_memories"
     repo Anderson.Repo
-
   end
 
-  attributes do
-    uuid_primary_key :id
+  # Set up vectorization for system memory content
+  vectorize do
+    full_text do
+      text fn entry ->
+        entry.content
+      end
 
-    attribute :content, :string do
-      description "The shared knowledge/fact"
-      allow_nil? false
+      used_attributes [:content]
     end
 
-    attribute :embedding, {:array, :float} do
-      description "Vector for similarity search"
-    end
+    strategy :ash_oban
+    ash_oban_trigger_name :generate_embedding
+    attributes content: :embedding
+    embedding_model Anderson.OpenAiEmbeddingModel
+  end
 
-    attribute :source_agent_id, :uuid do
-      description "Agent that contributed this entry"
+  oban do
+    triggers do
+      trigger :generate_embedding do
+        action :ash_ai_update_embeddings
+        worker_read_action :read
+        worker_module_name __MODULE__.AshOban.Worker.UpdateEmbeddings
+        scheduler_module_name __MODULE__.AshOban.Scheduler.UpdateEmbeddings
+        queue :memory
+      end
     end
+  end
 
-    attribute :importance_score, :float do
-      description "Measure of global importance"
-      default 0.0
-      constraints min: 0.0, max: 1.0
-    end
-
-    attribute :creation_timestamp, :utc_datetime do
-      description "When it was added"
-      default &DateTime.utc_now/0
-    end
-
-    timestamps()
+  code_interface do
+    define :create
+    define :read
+    define :by_id, args: [:id], action: :read
+    define :contribute, args: [:content, :source_agent_id, :importance_score]
+    define :search_by_similarity, args: [:query_text, :limit]
+    define :update
+    define :destroy
   end
 
   actions do
@@ -107,41 +114,33 @@ defmodule Anderson.MemoryOS.SystemMemory do
     end
   end
 
-  oban do
-    triggers do
-      trigger :generate_embedding do
-        action :ash_ai_update_embeddings
-        worker_read_action :read
-        worker_module_name __MODULE__.AshOban.Worker.UpdateEmbeddings
-        scheduler_module_name __MODULE__.AshOban.Scheduler.UpdateEmbeddings
-        queue :memory
-      end
-    end
-  end
+  attributes do
+    uuid_primary_key :id
 
-  code_interface do
-    define :create
-    define :read
-    define :by_id, args: [:id], action: :read
-    define :contribute, args: [:content, :source_agent_id, :importance_score]
-    define :search_by_similarity, args: [:query_text, :limit]
-    define :update
-    define :destroy
-  end
-
-  # Set up vectorization for system memory content
-  vectorize do
-    full_text do
-      text fn entry ->
-        entry.content
-      end
-
-      used_attributes [:content]
+    attribute :content, :string do
+      description "The shared knowledge/fact"
+      allow_nil? false
     end
 
-    strategy :ash_oban
-    ash_oban_trigger_name :generate_embedding
-    attributes(content: :embedding)
-    embedding_model Anderson.OpenAiEmbeddingModel
+    attribute :embedding, {:array, :float} do
+      description "Vector for similarity search"
+    end
+
+    attribute :source_agent_id, :uuid do
+      description "Agent that contributed this entry"
+    end
+
+    attribute :importance_score, :float do
+      description "Measure of global importance"
+      default 0.0
+      constraints min: 0.0, max: 1.0
+    end
+
+    attribute :creation_timestamp, :utc_datetime do
+      description "When it was added"
+      default &DateTime.utc_now/0
+    end
+
+    timestamps()
   end
 end

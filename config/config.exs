@@ -64,16 +64,16 @@ config :anderson,
     default_object_kb_capacity: 100,
     default_object_traits_capacity: 50,
     default_agent_traits_capacity: 30,
-    
+
     # F-score thresholds
     default_fscore_threshold: 0.6,
-    
+
     # Heat score parameters
     default_heat_alpha: 1.0,
     default_heat_beta: 0.5,
     default_heat_gamma: 2.0,
     default_heat_threshold: 5.0,
-    
+
     # System Memory parameters
     default_importance_threshold: 0.8
   ]

@@ -3,7 +3,7 @@ defmodule Anderson.OpenAiEmbeddingModel do
 
   @moduledoc """
   Embedding model that uses OpenAI API to generate vector embeddings.
-  
+
   This implementation uses the text-embedding-3-large model to generate
   embeddings with 3072 dimensions.
   """
@@ -16,7 +16,7 @@ defmodule Anderson.OpenAiEmbeddingModel do
     # API key should be fetched from environment or configuration
     # For development, we'll use Application config for now
     api_key = Application.get_env(:anderson, :openai_api_key) || System.get_env("OPENAI_API_KEY")
-    
+
     unless api_key do
       raise "OpenAI API key not found. Please set it in config or as OPENAI_API_KEY environment variable"
     end
@@ -32,9 +32,9 @@ defmodule Anderson.OpenAiEmbeddingModel do
     }
 
     case Req.post("https://api.openai.com/v1/embeddings",
-      json: body,
-      headers: headers
-    ) do
+           json: body,
+           headers: headers
+         ) do
       {:ok, %{status: 200, body: response}} ->
         response["data"]
         |> Enum.map(fn %{"embedding" => embedding} -> embedding end)
@@ -42,7 +42,7 @@ defmodule Anderson.OpenAiEmbeddingModel do
 
       {:ok, %{status: status, body: body}} ->
         {:error, "OpenAI API error: #{status}, #{inspect(body)}"}
-        
+
       {:error, error} ->
         {:error, "Request error: #{inspect(error)}"}
     end

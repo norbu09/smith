@@ -5,7 +5,7 @@ defmodule Anderson.MemoryOS.LPM.KnowledgeBaseEntry do
 
   @moduledoc """
   Long-Term Personal Memory (LPM) KnowledgeBaseEntry Resource
-  
+
   Stores factual information about entities that agents interact with.
   Implemented as a fixed-size queue for each ObjectPersona.
   """
@@ -13,6 +13,18 @@ defmodule Anderson.MemoryOS.LPM.KnowledgeBaseEntry do
   postgres do
     table "memory_lpm_knowledge_base_entries"
     repo Anderson.Repo
+  end
+
+  code_interface do
+    define :create
+    define :read
+    define :by_id, args: [:id], action: :read
+    define :update
+    define :destroy
+  end
+
+  actions do
+    defaults [:create, :read, :update, :destroy]
   end
 
   attributes do
@@ -46,17 +58,5 @@ defmodule Anderson.MemoryOS.LPM.KnowledgeBaseEntry do
     belongs_to :object_persona, Anderson.MemoryOS.LPM.ObjectPersona do
       attribute_writable? true
     end
-  end
-
-  actions do
-    defaults [:create, :read, :update, :destroy]
-  end
-
-  code_interface do
-    define :create
-    define :read
-    define :by_id, args: [:id], action: :read
-    define :update
-    define :destroy
   end
 end

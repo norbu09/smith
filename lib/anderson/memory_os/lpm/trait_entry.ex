@@ -5,7 +5,7 @@ defmodule Anderson.MemoryOS.LPM.TraitEntry do
 
   @moduledoc """
   Long-Term Personal Memory (LPM) TraitEntry Resource
-  
+
   Stores inferred traits/properties of entities that agents interact with.
   Implemented as a fixed-size queue for each ObjectPersona or AgentPersona.
   """
@@ -13,6 +13,32 @@ defmodule Anderson.MemoryOS.LPM.TraitEntry do
   postgres do
     table "memory_lpm_trait_entries"
     repo Anderson.Repo
+  end
+
+  code_interface do
+    define :create
+    define :read
+    define :by_id, args: [:id], action: :read
+    define :update
+    define :destroy
+  end
+
+  # Add a custom validation in a before_action hook
+  actions do
+    defaults [:read, :destroy]
+
+    create :create do
+      before_action(:validate_relationships)
+    end
+
+    update :update do
+      before_action(:validate_relationships)
+    end
+  end
+
+  # Custom validation will be implemented in a before_action hook
+  validations do
+    # This will be replaced with custom validation logic
   end
 
   attributes do
@@ -64,34 +90,8 @@ defmodule Anderson.MemoryOS.LPM.TraitEntry do
     end
   end
 
-  # Custom validation will be implemented in a before_action hook
-  validations do
-    # This will be replaced with custom validation logic
-  end
-  
-  # Add a custom validation in a before_action hook
-  actions do
-    defaults [:read, :destroy]
-    
-    create :create do
-      before_action :validate_relationships
-    end
-    
-    update :update do
-      before_action :validate_relationships
-    end
-  end
-  
   # Define the function to validate exactly one of object_persona_id or agent_persona_id is set
   identities do
     identity :exclusive_persona, [:object_persona_id, :agent_persona_id]
-  end
-
-  code_interface do
-    define :create
-    define :read
-    define :by_id, args: [:id], action: :read
-    define :update
-    define :destroy
   end
 end

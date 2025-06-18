@@ -3,7 +3,7 @@ defmodule Anderson.MemoryOS do
 
   @moduledoc """
   MemoryOS domain for memory management system in AI agents.
-  
+
   This domain implements a sophisticated memory management system inspired by operating system principles,
   addressing the limitations of fixed context windows in Large Language Models (LLMs) by providing
   a hierarchical storage architecture and intelligent memory management.
@@ -21,10 +21,10 @@ defmodule Anderson.MemoryOS do
     resource Anderson.MemoryOS.LPM.AgentPersona
     resource Anderson.MemoryOS.LPM.KnowledgeBaseEntry
     resource Anderson.MemoryOS.LPM.TraitEntry
-    
+
     # System Memory
     resource Anderson.MemoryOS.SystemMemory
-    
+
     # Configuration
     resource Anderson.MemoryOS.Configuration
   end

@@ -6,13 +6,97 @@ defmodule Anderson.MemoryOS.STM.DialoguePage do
 
   @moduledoc """
   Short-Term Memory (STM) DialoguePage Resource
-  
+
   Stores recent conversation/interaction data in a fixed-length queue per agent.
   """
 
   postgres do
     table "memory_stm_dialogue_pages"
     repo Anderson.Repo
+  end
+
+  oban do
+    triggers do
+      # Generate a meta chain summary for this dialogue page
+      trigger :generate_meta_chain do
+        action :update
+        worker_read_action :read
+        worker_module_name Anderson.MemoryOS.Workers.UpdateMetaChainWorker
+        queue :memory
+
+        scheduler_module_name Anderson.MemoryOS.STM.DialoguePage.AshOban.Scheduler.GenerateMetaChain
+
+        # The worker implementation will be defined separately
+      end
+
+      # Check if STM is at capacity for this agent and transfer older pages to MTM if needed
+      trigger :check_stm_capacity do
+        action :update
+        worker_read_action :read
+        queue :memory
+        worker_module_name Anderson.MemoryOS.Workers.CheckSTMCapacityWorker
+
+        scheduler_module_name Anderson.MemoryOS.STM.DialoguePage.AshOban.Scheduler.CheckStmCapacity
+
+        # The worker implementation will be defined separately
+      end
+    end
+  end
+
+  code_interface do
+    define :create
+    define :read
+    define :by_id, args: [:id], action: :read
+    define :add_to_stm, args: [:agent_id, :query, :response]
+    define :update
+    define :destroy
+  end
+
+  # Configure as a fixed-length queue per agent
+  # Actions will be implemented to manage the queue behavior
+
+  actions do
+    defaults [:create, :read, :update, :destroy]
+
+    create :add_to_stm do
+      description "Adds a dialogue page to STM and maintains the queue length constraints"
+
+      argument :agent_id, :uuid do
+        allow_nil? false
+      end
+
+      argument :query, :string do
+        allow_nil? false
+      end
+
+      argument :response, :string do
+        allow_nil? false
+      end
+
+      change set_attribute(:agent_id, arg(:agent_id))
+      change set_attribute(:query, arg(:query))
+      change set_attribute(:response, arg(:response))
+
+      # We'll handle the Oban triggers separately in a before_action hook
+      # Since we need to wait until after the record is created
+    end
+
+    # Custom action to trigger job scheduling
+    update :schedule_jobs do
+      primary? false
+      require_atomic? false
+
+      change fn changeset, _context ->
+        # After a successful create, schedule both jobs
+        changeset
+        |> Ash.Changeset.after_transaction(fn _result, changeset ->
+          record = Ash.Changeset.get_record(changeset)
+          AshOban.schedule(record, :generate_meta_chain)
+          AshOban.schedule(record, :check_stm_capacity)
+          {:ok, record}
+        end)
+      end
+    end
   end
 
   attributes do
@@ -49,80 +133,5 @@ defmodule Anderson.MemoryOS.STM.DialoguePage do
     end
 
     timestamps()
-  end
-
-  # Configure as a fixed-length queue per agent
-  # Actions will be implemented to manage the queue behavior
-
-  actions do
-    defaults [:create, :read, :update, :destroy]
-    
-    create :add_to_stm do
-      description "Adds a dialogue page to STM and maintains the queue length constraints"
-      argument :agent_id, :uuid do
-        allow_nil? false
-      end
-      argument :query, :string do
-        allow_nil? false
-      end
-      argument :response, :string do
-        allow_nil? false
-      end
-
-      change set_attribute(:agent_id, arg(:agent_id))
-      change set_attribute(:query, arg(:query))
-      change set_attribute(:response, arg(:response))
-
-      # We'll handle the Oban triggers separately in a before_action hook
-      # Since we need to wait until after the record is created
-    end
-    
-    # Custom action to trigger job scheduling
-    update :schedule_jobs do
-      primary? false
-      require_atomic? false
-      
-      change fn changeset, _context ->
-        # After a successful create, schedule both jobs
-        changeset
-        |> Ash.Changeset.after_transaction(fn _result, changeset ->
-          record = Ash.Changeset.get_record(changeset)
-          AshOban.schedule(record, :generate_meta_chain)
-          AshOban.schedule(record, :check_stm_capacity)
-          {:ok, record}
-        end)
-      end
-    end
-  end
-
-  oban do
-    triggers do
-      # Generate a meta chain summary for this dialogue page
-      trigger :generate_meta_chain do
-        action :update
-        worker_read_action :read
-        worker_module_name Anderson.MemoryOS.Workers.UpdateMetaChainWorker
-        queue :memory
-        # The worker implementation will be defined separately
-      end
-
-      # Check if STM is at capacity for this agent and transfer older pages to MTM if needed
-      trigger :check_stm_capacity do
-        action :update
-        worker_read_action :read
-        queue :memory
-        worker_module_name Anderson.MemoryOS.Workers.CheckSTMCapacityWorker
-        # The worker implementation will be defined separately
-      end
-    end
-  end
-
-  code_interface do
-    define :create
-    define :read
-    define :by_id, args: [:id], action: :read
-    define :add_to_stm, args: [:agent_id, :query, :response]
-    define :update
-    define :destroy
   end
 end
