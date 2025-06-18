@@ -12,7 +12,7 @@ config :ash_oban, pro?: false
 config :anderson, Oban,
   engine: Oban.Engines.Basic,
   notifier: Oban.Notifiers.Postgres,
-  queues: [default: 10],
+  queues: [default: 10, memory: 10],
   repo: Anderson.Repo,
   plugins: [{Oban.Plugins.Cron, []}]
 

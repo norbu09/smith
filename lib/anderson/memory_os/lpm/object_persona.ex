@@ -60,6 +60,7 @@ defmodule Anderson.MemoryOS.LPM.ObjectPersona do
 
     update :add_knowledge do
       description "Add a piece of knowledge to this object persona"
+      require_atomic? false
 
       # Accept the id parameter to align with code_interface
       argument :id, :uuid do
@@ -94,6 +95,7 @@ defmodule Anderson.MemoryOS.LPM.ObjectPersona do
 
     update :add_trait do
       description "Add a trait to this object persona"
+      require_atomic? false
 
       # Accept the id parameter to align with code_interface
       argument :id, :uuid do

@@ -50,6 +50,7 @@ defmodule Anderson.MemoryOS.LPM.AgentPersona do
 
     update :add_trait do
       description "Add a trait to this agent persona"
+      require_atomic? false
 
       # Add id argument to align with code_interface
       argument :id, :uuid do
@@ -95,6 +96,7 @@ defmodule Anderson.MemoryOS.LPM.AgentPersona do
 
     update :update_profile do
       description "Update the agent's profile"
+      require_atomic? false
 
       # Add id argument to align with code_interface
       argument :id, :uuid do
