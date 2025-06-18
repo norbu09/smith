@@ -1,4 +1,4 @@
-defmodule Anderson.DataCase do
+defmodule Smith.DataCase do
   @moduledoc """
   This module defines the setup for tests requiring
   access to the application's data layer.
@@ -10,7 +10,7 @@ defmodule Anderson.DataCase do
   we enable the SQL sandbox, so changes done to the database
   are reverted at the end of every test. If you are using
   PostgreSQL, you can even run database tests asynchronously
-  by setting `use Anderson.DataCase, async: true`, although
+  by setting `use Smith.DataCase, async: true`, although
   this option is not recommended for other databases.
   """
 
@@ -18,17 +18,17 @@ defmodule Anderson.DataCase do
 
   using do
     quote do
-      alias Anderson.Repo
+      alias Smith.Repo
 
       import Ecto
       import Ecto.Changeset
       import Ecto.Query
-      import Anderson.DataCase
+      import Smith.DataCase
     end
   end
 
   setup tags do
-    Anderson.DataCase.setup_sandbox(tags)
+    Smith.DataCase.setup_sandbox(tags)
     :ok
   end
 
@@ -36,14 +36,14 @@ defmodule Anderson.DataCase do
   Sets up the sandbox based on the test tags.
   """
   def setup_sandbox(tags) do
-    pid = Ecto.Adapters.SQL.Sandbox.start_owner!(Anderson.Repo, shared: not tags[:async])
+    pid = Ecto.Adapters.SQL.Sandbox.start_owner!(Smith.Repo, shared: not tags[:async])
     on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)
   end
 
   @doc """
   A helper that transforms changeset errors into a map of messages.
 
-      assert {:error, changeset} = Accounts.create_user(%{password: "short"})
+      assert {:error, changeset} = Smith.Accounts.create_user(%{password: "short"})
       assert "password is too short" in errors_on(changeset).password
       assert %{password: ["password is too short"]} = errors_on(changeset)
 

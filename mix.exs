@@ -1,9 +1,9 @@
-defmodule Anderson.MixProject do
+defmodule Smith.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :anderson,
+      app: :smith,
       version: "0.1.0",
       elixir: "~> 1.15",
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -20,7 +20,7 @@ defmodule Anderson.MixProject do
   # Type `mix help compile.app` for more information.
   def application do
     [
-      mod: {Anderson.Application, []},
+      mod: {Smith.Application, []},
       extra_applications: [:logger, :runtime_tools]
     ]
   end
@@ -85,10 +85,10 @@ defmodule Anderson.MixProject do
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ash.setup --quiet", "test"],
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
-      "assets.build": ["tailwind anderson", "esbuild anderson"],
+      "assets.build": ["tailwind smith", "esbuild smith"],
       "assets.deploy": [
-        "tailwind anderson --minify",
-        "esbuild anderson --minify",
+        "tailwind smith --minify",
+        "esbuild smith --minify",
         "phx.digest"
       ]
     ]

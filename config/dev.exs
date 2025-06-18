@@ -1,11 +1,11 @@
 import Config
 
 # Configure your database
-config :anderson, Anderson.Repo,
+config :smith, Smith.Repo,
   username: "postgres",
   password: "postgres",
   hostname: "localhost",
-  database: "anderson_dev",
+  database: "smith_dev",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
   pool_size: 10
@@ -16,7 +16,7 @@ config :anderson, Anderson.Repo,
 # The watchers configuration can be used to run external
 # watchers to your application. For example, we can use it
 # to bundle .js and .css sources.
-config :anderson, AndersonWeb.Endpoint,
+config :smith, SmithWeb.Endpoint,
   # Binding to loopback ipv4 address prevents access from other machines.
   # Change to `ip: {0, 0, 0, 0}` to allow access from other machines.
   http: [ip: {127, 0, 0, 1}, port: String.to_integer(System.get_env("PORT") || "4000")],
@@ -25,8 +25,8 @@ config :anderson, AndersonWeb.Endpoint,
   debug_errors: true,
   secret_key_base: "ZH4GT5XFvNo1wxZ40Wj+2p73F1XOStnRTPAXq9nQIX8lxhPdJfsVAHEgOnOUZiuG",
   watchers: [
-    esbuild: {Esbuild, :install_and_run, [:anderson, ~w(--sourcemap=inline --watch)]},
-    tailwind: {Tailwind, :install_and_run, [:anderson, ~w(--watch)]}
+    esbuild: {Esbuild, :install_and_run, [:smith, ~w(--sourcemap=inline --watch)]},
+    tailwind: {Tailwind, :install_and_run, [:smith, ~w(--watch)]}
   ]
 
 # ## SSL Support
@@ -53,18 +53,18 @@ config :anderson, AndersonWeb.Endpoint,
 # different ports.
 
 # Watch static and templates for browser reloading.
-config :anderson, AndersonWeb.Endpoint,
+config :smith, SmithWeb.Endpoint,
   live_reload: [
     web_console_logger: true,
     patterns: [
       ~r"priv/static/(?!uploads/).*(js|css|png|jpeg|jpg|gif|svg)$",
       ~r"priv/gettext/.*(po)$",
-      ~r"lib/anderson_web/(?:controllers|live|components|router)/?.*\.(ex|heex)$"
+      ~r"lib/smith_web/(?:controllers|live|components|router)/?.*\.(ex|heex)$"
     ]
   ]
 
 # Enable dev routes for dashboard and mailbox
-config :anderson, dev_routes: true
+config :smith, dev_routes: true
 
 # Do not include metadata nor timestamps in development logs
 config :logger, :default_formatter, format: "[$level] $message\n"
@@ -87,7 +87,7 @@ config :phoenix_live_view,
 config :swoosh, :api_client, false
 
 # MemoryOS configuration for development
-config :anderson,
+config :smith,
   # Use mock embeddings in development unless OpenAI API key is available
   use_mock_embeddings: System.get_env("OPENAI_API_KEY") == nil,
   # OpenAI API key for embedding generation (can be set via environment variable)

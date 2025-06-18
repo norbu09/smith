@@ -9,11 +9,11 @@ import Config
 
 config :ash_oban, pro?: false
 
-config :anderson, Oban,
+config :smith, Oban,
   engine: Oban.Engines.Basic,
   notifier: Oban.Notifiers.Postgres,
   queues: [default: 10, memory: 10],
-  repo: Anderson.Repo,
+  repo: Smith.Repo,
   plugins: [{Oban.Plugins.Cron, []}]
 
 config :ash,
@@ -52,11 +52,11 @@ config :spark,
     "Ash.Domain": [section_order: [:resources, :policies, :authorization, :domain, :execution]]
   ]
 
-config :anderson,
-  ecto_repos: [Anderson.Repo],
+config :smith,
+  ecto_repos: [Smith.Repo],
   generators: [timestamp_type: :utc_datetime],
   # List of domains to be used by Ash
-  ash_domains: [Anderson.MemoryOS],
+  ash_domains: [Smith.MemoryOS],
   # MemoryOS default configuration
   memory_os: [
     default_stm_capacity: 7,
@@ -79,14 +79,14 @@ config :anderson,
   ]
 
 # Configures the endpoint
-config :anderson, AndersonWeb.Endpoint,
+config :smith, SmithWeb.Endpoint,
   url: [host: "localhost"],
   adapter: Bandit.PhoenixAdapter,
   render_errors: [
-    formats: [html: AndersonWeb.ErrorHTML, json: AndersonWeb.ErrorJSON],
+    formats: [html: SmithWeb.ErrorHTML, json: SmithWeb.ErrorJSON],
     layout: false
   ],
-  pubsub_server: Anderson.PubSub,
+  pubsub_server: Smith.PubSub,
   live_view: [signing_salt: "ljHWRH+e"]
 
 # Configures the mailer
@@ -96,12 +96,12 @@ config :anderson, AndersonWeb.Endpoint,
 #
 # For production it's recommended to configure a different adapter
 # at the `config/runtime.exs`.
-config :anderson, Anderson.Mailer, adapter: Swoosh.Adapters.Local
+config :smith, Smith.Mailer, adapter: Swoosh.Adapters.Local
 
 # Configure esbuild (the version is required)
 config :esbuild,
   version: "0.17.11",
-  anderson: [
+  smith: [
     args:
       ~w(js/app.js --bundle --target=es2022 --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/*),
     cd: Path.expand("../assets", __DIR__),
@@ -111,7 +111,7 @@ config :esbuild,
 # Configure tailwind (the version is required)
 config :tailwind,
   version: "4.0.9",
-  anderson: [
+  smith: [
     args: ~w(
       --input=assets/css/app.css
       --output=priv/static/assets/css/app.css

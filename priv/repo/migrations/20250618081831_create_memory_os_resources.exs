@@ -1,4 +1,4 @@
-defmodule Anderson.Repo.Migrations.CreateMemoryOsResources do
+defmodule Smith.Repo.Migrations.CreateMemoryOsResources do
   @moduledoc """
   Updates resources based on their most recent snapshots.
 

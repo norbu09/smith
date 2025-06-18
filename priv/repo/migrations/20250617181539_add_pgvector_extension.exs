@@ -1,4 +1,4 @@
-defmodule Anderson.Repo.Migrations.AddPgvectorExtension do
+defmodule Smith.Repo.Migrations.AddPgvectorExtension do
   use Ecto.Migration
 
   def change do
