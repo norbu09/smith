@@ -27,6 +27,7 @@ MemoryOS
 #### 1. Short-Term Memory (STM)
 
 **`MemoryOS.STM.DialoguePage` Resource:**
+
 - **Purpose**: Stores recent conversation/interaction data
 - **Key Attributes**:
   - `query`: Input from the external entity
@@ -41,6 +42,7 @@ MemoryOS
 #### 2. Mid-Term Memory (MTM)
 
 **`MemoryOS.MTM.DialogueSegment` Resource:**
+
 - **Purpose**: Groups related DialoguePages by topic
 - **Key Attributes**:
   - `topic_summary`: LLM-generated summary of segment content
@@ -59,6 +61,7 @@ MemoryOS
 #### 3. Long-Term Personal Memory (LPM)
 
 **`MemoryOS.LPM.ObjectPersona` Resource:**
+
 - **Purpose**: Flexible storage for any entity the agent interacts with
 - **Key Attributes**:
   - `type`: The type of entity (user, domain, product, etc.)
@@ -74,6 +77,7 @@ MemoryOS
   - Queue sizes configurable per agent
 
 **`MemoryOS.LPM.AgentPersona` Resource:**
+
 - **Purpose**: Stores agent's own traits and history
 - **Key Attributes**:
   - `profile`: Agent's core identity settings
@@ -86,6 +90,7 @@ MemoryOS
 #### 4. System Memory (Shared)
 
 **`MemoryOS.SystemMemory` Resource:**
+
 - **Purpose**: Cross-agent shared knowledge
 - **Key Attributes**:
   - `content`: The shared knowledge/fact
@@ -102,6 +107,7 @@ MemoryOS
 All constants and thresholds will be configurable through a combination of:
 
 1. **Application-wide defaults** in `config.exs`:
+
    ```elixir
    config :anderson, MemoryOS,
      default_stm_capacity: 7,
@@ -110,6 +116,7 @@ All constants and thresholds will be configurable through a combination of:
    ```
 
 2. **Agent-specific configurations** via a dedicated resource:
+
    ```elixir
    defmodule MemoryOS.Configuration do
      use Ash.Resource, data_layer: AshPostgres.DataLayer
@@ -137,11 +144,13 @@ All constants and thresholds will be configurable through a combination of:
 ### 1. Fscore Calculation
 
 The Fscore determines the similarity between a DialoguePage and a DialogueSegment, defined as:
+
 ```
 Fscore = cos(e_s, e_p) + FJacard(K_s, K_p)
 ```
 
 Implementation via Ash calculation:
+
 ```elixir
 # Vector similarity using pgvector
 calculation :cosine_similarity, :float, private?: true,
@@ -168,11 +177,13 @@ calculation :fscore, :float,
 ### 2. Heat Score Calculation
 
 Heat determines the importance of a DialogueSegment, defined as:
+
 ```
 Heat = α · N_visit + β · L_interaction + γ · R_recency
 ```
 
 Implementation:
+
 ```elixir
 calculation :recency_factor, :float, private?: true,
   calculate: fn segment, _context ->
@@ -206,6 +217,7 @@ When a DialoguePage is pushed out of STM, it's integrated into MTM:
 4. Update segment's topic summary
 
 Implementation via Oban worker:
+
 ```elixir
 defmodule MemoryOS.Workers.STMToMTM do
   use Oban.Worker, queue: :memory
@@ -302,6 +314,8 @@ When a query arrives, MemoryOS executes a multi-level retrieval:
 
 ## Technical Considerations
 
+Read the python implementation here: <https://github.com/BAI-LAB/MemoryOS/tree/main/memoryos-mcp/memoryos> - especially the prompts: <https://github.com/BAI-LAB/MemoryOS/blob/main/memoryos-mcp/memoryos/prompts.py> to get a feel for how the implementation should look like.
+
 ### Vector Storage
 
 All vector operations will leverage Ash's vector extension:
@@ -383,7 +397,7 @@ A possible embedding module could look like this:
       end
     end
   end
-``` 
+```
 
 ### Background Processing
 

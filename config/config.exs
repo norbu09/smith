@@ -7,6 +7,15 @@
 # General application configuration
 import Config
 
+config :ash_oban, pro?: false
+
+config :anderson, Oban,
+  engine: Oban.Engines.Basic,
+  notifier: Oban.Notifiers.Postgres,
+  queues: [default: 10],
+  repo: Anderson.Repo,
+  plugins: [{Oban.Plugins.Cron, []}]
+
 config :ash,
   allow_forbidden_field_for_relationships_by_default?: true,
   include_embedded_source_by_default?: false,
@@ -45,7 +54,29 @@ config :spark,
 
 config :anderson,
   ecto_repos: [Anderson.Repo],
-  generators: [timestamp_type: :utc_datetime]
+  generators: [timestamp_type: :utc_datetime],
+  # List of domains to be used by Ash
+  ash_domains: [Anderson.MemoryOS],
+  # MemoryOS default configuration
+  memory_os: [
+    default_stm_capacity: 7,
+    default_mtm_capacity: 200,
+    default_object_kb_capacity: 100,
+    default_object_traits_capacity: 50,
+    default_agent_traits_capacity: 30,
+    
+    # F-score thresholds
+    default_fscore_threshold: 0.6,
+    
+    # Heat score parameters
+    default_heat_alpha: 1.0,
+    default_heat_beta: 0.5,
+    default_heat_gamma: 2.0,
+    default_heat_threshold: 5.0,
+    
+    # System Memory parameters
+    default_importance_threshold: 0.8
+  ]
 
 # Configures the endpoint
 config :anderson, AndersonWeb.Endpoint,

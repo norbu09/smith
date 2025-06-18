@@ -1,4 +1,5 @@
 import Config
+config :anderson, Oban, testing: :manual
 
 # Configure your database
 #

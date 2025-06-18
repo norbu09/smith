@@ -11,6 +11,11 @@ defmodule Anderson.Application do
       AndersonWeb.Telemetry,
       Anderson.Repo,
       {DNSCluster, query: Application.get_env(:anderson, :dns_cluster_query) || :ignore},
+      {Oban,
+       AshOban.config(
+         Application.fetch_env!(:anderson, :ash_domains),
+         Application.fetch_env!(:anderson, Oban)
+       )},
       {Phoenix.PubSub, name: Anderson.PubSub},
       # Start a worker by calling: Anderson.Worker.start_link(arg)
       # {Anderson.Worker, arg},

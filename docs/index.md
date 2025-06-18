@@ -10,6 +10,14 @@ We make heavy use of MCP servers, call them for function signatures, documentati
 
 ## Frameworks
 
+### Dependencies
+
+We use igniter where possible. Install dependencies via `mix igniter.install --yes <dependency>` if they support igniter. Otherwise add them to the mix.exs file and run `mix deps.get`.
+
+### Req
+
+We use req for HTTP requests. Read up on how to use it in the req book: <https://hexdocs.pm/req/readme.html>
+
 ### Ash
 
 We use the ash framework which is a elixir framework for declarative coding. Read up on how to use this version of ash in the ash book: `docs/ash.md`
@@ -43,7 +51,7 @@ From elixir 1.18 onwards we have a native JSON module in the core library. Use t
 
 ### PostgreSQL
 
-We use PostgreSQL as our central data store. For vector storage we use the `vector` extension which is already in our system via the `pgvector` elixir module and the `Ash.Vector` core ash module.
+We use PostgreSQL as our central data store. For vector storage we use the `vector` extension which is already in our system via the `pgvector` elixir module and the `Ash.Vector` core ash module. We don't need to import any vector extensions in ash!
 
 ## Decision making
 
@@ -60,3 +68,9 @@ Use core abstractions well. Ash has a direct pub/sub integration that works well
 Use oban for background jobs. There is a ash_oban library that you can use for that.
 
 Write ash extensions for things that are not handled well in Ash at the moment. Here are details on how to do that: <https://hexdocs.pm/ash/writing-extensions.html>
+
+Keep files small. Any file above 300 LOC is too large, break it down into parts. A good pattern is to create a directory with the base intent and then add specific files under that directory.
+
+Always make sure code compiles and has no warnings with `mix compile --warnings-as-errors`.
+
+Always make sure tests pass with `mix test`.
