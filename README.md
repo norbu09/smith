@@ -46,15 +46,19 @@ The specific implementation details have been adapted for the Elixir/OTP ecosyst
 The system implements several key algorithms:
 
 - **Fscore Calculation**: Combines semantic similarity and keyword overlap to group related content
+
   ```
   Fscore = cos(e_s, e_p) + FJacard(K_s, K_p)
   ```
+
   Where `e_s` and `e_p` are embedding vectors, and `K_s` and `K_p` are keyword sets.
 
 - **Heat Score**: Determines memory importance based on:
+
   ```
   Heat = α·N_visit + β·L_interaction + γ·R_recency
   ```
+
   Where `N_visit` is visit count, `L_interaction` is interaction length, and `R_recency` is a time decay factor.
 
 This implementation brings these research concepts into a production-ready system using modern Elixir technologies like the Ash framework and Phoenix LiveView.
@@ -79,17 +83,20 @@ This implementation brings these research concepts into a production-ready syste
 ### Setup
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/kittyfromouterspace/smith.git
    cd smith
    ```
 
 2. Install dependencies:
+
    ```bash
    mix setup
    ```
 
 3. Start the Phoenix server:
+
    ```bash
    mix phx.server
    ```
@@ -222,4 +229,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - Built with [Phoenix](https://www.phoenixframework.org/)
 - Powered by [Ash Framework](https://ash-hq.org/)
-- Inspired by research in cognitive architectures and memory systems
+- inspired by research from (<https://github.com/BAI-LAB/MemoryOS>):
+  @misc{kang2025memoryosaiagent,
+      title={Memory OS of AI Agent},
+      author={Jiazheng Kang and Mingming Ji and Zhe Zhao and Ting Bai},
+      year={2025},
+      eprint={2506.06326},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI},
+      url={<https://arxiv.org/abs/2506.06326}>,
+  }
