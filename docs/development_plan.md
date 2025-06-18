@@ -34,9 +34,17 @@
 - [ ] Generate and run migrations for new MemoryOS resources.
 - [x] Create and maintain a copy of the plan in `docs/development_plan.md`.
 
-### Phase 2: Core Logic
-- [ ] Implement `Fscore` calculation on `DialogueSegment`.
-- [ ] Implement `Heat Score` calculation on `DialogueSegment`.
+### Phase 2: Core Logic ✅ COMPLETE
+- [x] Implement `Fscore` calculation on `DialogueSegment`.
+- [x] Implement `Heat Score` calculation on `DialogueSegment`.
+- [x] Implement core MemoryOS algorithms in `Anderson.MemoryOS.Calculations`:
+  - [x] Cosine similarity for embedding vectors
+  - [x] Jaccard similarity for keyword sets
+  - [x] Fscore formula: `Fscore = cos(e_s, e_p) + FJacard(K_s, K_p)`
+  - [x] Recency factor: `R_recency = exp(-Δt / μ)` with μ = 1e+7 seconds
+  - [x] Heat score: `Heat = α·N_visit + β·L_interaction + γ·R_recency` with α=β=γ=1.0
+- [x] Context-aware calculation functions for DialogueSegment resource integration
+- [x] All calculations properly integrate with Ash DSL and compile successfully
 
 ### Phase 3: Memory Management Processes
 - [ ] Implement STM-MTM transfer process with an Oban worker.
@@ -56,4 +64,6 @@
 
 ## Current Goal
 
-Fix all compilation errors.
+Phase 2 (Core Logic) has been completed! All MemoryOS algorithms from the paper have been implemented and integrated successfully.
+
+**Next Steps**: Proceed to Phase 3 (Memory Management Processes) to implement STM-MTM transfer and background jobs.

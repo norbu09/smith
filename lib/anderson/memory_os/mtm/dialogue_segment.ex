@@ -247,72 +247,38 @@ defmodule Anderson.MemoryOS.MTM.DialogueSegment do
   end
 
   calculations do
-    # Vector similarity using pgvector
-    calculate :cosine_similarity, :float, private?: true do
-      description "Calculate cosine similarity between segment embedding and query embedding"
-      # Note: This calculation will be used with the supplied query embedding during runtime
+    # Vector similarity using pgvector - will be computed when context provides query embedding
+    calculate :cosine_similarity, :float,
+      {Anderson.MemoryOS.Calculations, :segment_cosine_similarity, []},
+      public?: false,
+      description: "Calculate cosine similarity between segment embedding and query embedding"
 
-      # Will be implemented using a database fragment once necessary
-      # fn segment, context ->
-      #   query_embedding = context.query_embedding
-      #   fragment("cosine_similarity(?::vector, ?::vector)",
-      #     segment.embedding,
-      #     query_embedding)
-      # end
-      fn segment, _context ->
-        Anderson.MemoryOS.Calculations.placeholder_calculation(segment, %{})
-      end
-    end
+    # Jaccard similarity between keyword sets - will be computed when context provides query keywords
+    calculate :keyword_similarity, :float,
+      {Anderson.MemoryOS.Calculations, :segment_jaccard_similarity, []},
+      public?: false,
+      description: "Calculate Jaccard similarity between segment keywords and query keywords"
 
-    # Jaccard similarity between keyword sets
-    calculate :keyword_similarity, :float, private?: true do
-      description "Calculate Jaccard similarity between segment keywords and query keywords"
-      # Note: This calculation will be used with supplied query keywords during runtime
+    # Final Fscore combining both measures - implements MemoryOS paper: Fscore = cos(e_s, e_p) + FJacard(K_s, K_p)
+    calculate :fscore, :float,
+      {Anderson.MemoryOS.Calculations, :segment_fscore, []},
+      description: "Combined similarity score implementing MemoryOS Fscore formula"
 
-      # Will be implemented once necessary
-      # Use an anonymous function wrapper instead of direct function reference
-      fn segment, _context ->
-        Anderson.MemoryOS.Calculations.placeholder_calculation(segment, %{})
-      end
-    end
+    # Recency factor calculation - implements MemoryOS paper: R_recency = exp(-Δt / μ)
+    calculate :recency_factor, :float,
+      expr(
+        fragment("exp(-EXTRACT(EPOCH FROM (NOW() - ?)) / 1.0e7)", last_accessed)
+      ),
+      description: "Calculate recency factor based on exponential decay from MemoryOS paper"
 
-    # Final Fscore combining both measures
-    calculate :fscore, :float, depends_on: [:cosine_similarity, :keyword_similarity] do
-      description "Combined similarity score (cosine + Jaccard)"
+    # Count of dialogue pages in this segment for heat calculation
+    calculate :page_count, :integer,
+      expr(count(dialogue_pages, field: :id)),
+      description: "Number of dialogue pages in this segment"
 
-      fn segment, _ ->
-        segment.cosine_similarity + segment.keyword_similarity
-      end
-    end
-
-    # Recency factor calculation
-    calculate :recency_factor, :float, private?: true do
-      description "Calculate recency factor based on exponential decay"
-
-      fn segment, context ->
-        μ = context[:time_constant] || 1.0e7
-        delta_t = DateTime.diff(DateTime.utc_now(), segment.last_accessed, :second)
-        :math.exp(-delta_t / μ)
-      end
-    end
-
-    # Heat score calculation
-    calculate :calculate_heat, :float, depends_on: [:visit_count, :recency_factor] do
-      description "Calculate heat based on visit count, page count and recency"
-
-      fn segment, context ->
-        # These values should come from configuration in practice
-        α = context[:heat_alpha] || 1.0
-        β = context[:heat_beta] || 0.5
-        γ = context[:heat_gamma] || 2.0
-
-        # Get the page count
-        page_count = length(segment.dialogue_pages)
-
-        α * segment.visit_count +
-          β * page_count +
-          γ * segment.recency_factor
-      end
-    end
+    # Heat score calculation - implements MemoryOS paper: Heat = α·N_visit + β·L_interaction + γ·R_recency
+    calculate :calculate_heat, :float,
+      {Anderson.MemoryOS.Calculations, :segment_heat_score, []},
+      description: "Calculate heat score based on MemoryOS paper formula with α=β=γ=1.0"
   end
 end
