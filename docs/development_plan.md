@@ -8,8 +8,8 @@
 - Configuration will be handled both globally in `config.exs` and on a per-agent basis via a `MemoryOS.Configuration` resource.
 - Background jobs for memory management will be handled by Oban.
 - LLM interactions are abstracted through a dedicated `MemoryOS.LLMClient` module, to be integrated with `AshAI`.
-- The project is a standard Phoenix application with core logic in `lib/anderson`.
-- No existing Ash domains were found. The new `MemoryOS` domain will be created in `lib/anderson/memory_os`, establishing the pattern for Ash-based modules in the project.
+- The project is a standard Phoenix application with core logic in `lib/smith`.
+- No existing Ash domains were found. The new `MemoryOS` domain will be created in `lib/smith/memory_os`, establishing the pattern for Ash-based modules in the project.
 - `ash_oban` has been installed and configured using `mix igniter.install ash_oban`. A migration has been generated.
 - The project was facing compilation errors related to the `calculations` DSL in `DialogueSegment`. This has been fixed. The next step is to re-compile and check for further errors.
 
@@ -26,7 +26,7 @@
 - [x] Define `MemoryOS.LPM.AgentPersona` resource.
 - [x] Define `MemoryOS.SystemMemory` resource.
 - [x] Define `MemoryOS.Configuration` resource.
-- [x] Define `Anderson.OpenAiEmbeddingModel`.
+- [x] Define `Smith.OpenAiEmbeddingModel`.
 - [x] Set up application-wide defaults in `config.exs`.
 - [x] Install and configure Oban using `mix igniter.install ash_oban`.
 - [x] Run database migrations to add Oban tables.
@@ -37,7 +37,7 @@
 ### Phase 2: Core Logic ✅ COMPLETE
 - [x] Implement `Fscore` calculation on `DialogueSegment`.
 - [x] Implement `Heat Score` calculation on `DialogueSegment`.
-- [x] Implement core MemoryOS algorithms in `Anderson.MemoryOS.Calculations`:
+- [x] Implement core MemoryOS algorithms in `Smith.MemoryOS.Calculations`:
   - [x] Cosine similarity for embedding vectors
   - [x] Jaccard similarity for keyword sets
   - [x] Fscore formula: `Fscore = cos(e_s, e_p) + FJacard(K_s, K_p)`

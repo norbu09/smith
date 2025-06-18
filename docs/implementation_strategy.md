@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines the implementation strategy for Anderson's MemoryOS, a sophisticated memory management system for AI agents inspired by operating system principles. MemoryOS addresses the limitations of fixed context windows in Large Language Models (LLMs) by providing a hierarchical storage architecture and intelligent memory management.
+This document outlines the implementation strategy for Smith's MemoryOS, a sophisticated memory management system for AI agents inspired by operating system principles. MemoryOS addresses the limitations of fixed context windows in Large Language Models (LLMs) by providing a hierarchical storage architecture and intelligent memory management.
 
 ## Core Architecture
 
@@ -109,7 +109,7 @@ All constants and thresholds will be configurable through a combination of:
 1. **Application-wide defaults** in `config.exs`:
 
    ```elixir
-   config :anderson, MemoryOS,
+   config :smith, MemoryOS,
      default_stm_capacity: 7,
      default_mtm_capacity: 200,
      default_object_kb_capacity: 100
