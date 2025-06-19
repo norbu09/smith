@@ -47,7 +47,7 @@ mix usage_rules.sync        # Update AGENTS.md after adding dependencies
 ```
 
 ### Background Jobs
-Background processing is handled by Oban. Jobs are defined in the `workers/` directory and managed through Ash's oban integration.
+Background processing is handled by Oban through Ash's AshOban extension. **IMPORTANT**: Do not manually create worker modules - AshOban automatically generates worker modules based on `trigger` definitions in resources. Creating manual worker files will cause module redefinition warnings during compilation.
 
 ## Technology Stack
 
@@ -95,6 +95,7 @@ lib/smith/memory_os/
 - Use `code_interface` blocks for programmatic resource access
 - Leverage `vectorize` blocks for automatic embedding generation
 - Background jobs via `oban` blocks with Ash triggers
+- **AshOban Worker Modules**: Never manually create worker modules with names matching trigger definitions (e.g., `UpdateMetaChainWorker`, `CheckSTMCapacityWorker`). AshOban generates these automatically from resource triggers.
 
 ### Phoenix Integration
 - Use LiveView for all interactive components
