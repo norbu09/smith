@@ -1,5 +1,9 @@
 # Smith
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![GitHub Issues](https://img.shields.io/github/issues/norbu09/smith)](https://github.com/norbu09/smith/issues)
+[![GitHub Pull Requests](https://img.shields.io/github/issues-pr/norbu09/smith)](https://github.com/norbu09/smith/pulls)
+
 Smith is a sophisticated memory management system for AI agents, built on the Elixir/OTP ecosystem. It provides long-term, personalized memory capabilities that overcome the limitations of fixed context windows in Large Language Models (LLMs).
 
 ## Background
@@ -106,6 +110,24 @@ This implementation brings these research concepts into a production-ready syste
 ## Usage
 
 ### Basic Concepts
+
+## Contributing
+
+Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTING.md) for details on how to submit pull requests, report issues, or suggest new features.
+
+## Code of Conduct
+
+This project adheres to the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
+
+## License
+
+Distributed under the MIT License. See [LICENSE](LICENSE) for more information.
+
+## Security
+
+For security-related issues, please see our [Security Policy](SECURITY.md).
+
+---
 
 Smith implements a hierarchical memory system with three main components:
 
